@@ -1,127 +1,250 @@
-<!doctype html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>VMeet</title>
-  <link rel="stylesheet" href="style.css">
-</head>
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const path = require("path");
 
-<body>
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
-  <div id="home" class="page">
-    <div class="card">
+app.use(express.static(path.join(__dirname, "public")));
 
-      <div class="logo">V<span>Meet</span></div>
+const rooms = new Map();
 
-      <h1>Họp trực tuyến đơn giản</h1>
+function createRoomId() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
 
-      <p>
-        Tạo phòng, gửi link và bắt đầu trò chuyện ngay trên trình duyệt.
-      </p>
+function sendParticipants(roomId) {
+  const room = rooms.get(roomId);
+  if (!room) return;
 
-      <input id="name" placeholder="Tên của bạn">
+  io.to(roomId).emit("participants", Array.from(room.users.values()));
+}
 
-      <button id="create">
-        Tạo phòng họp
-      </button>
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
 
-      <div class="join">
-        <input id="room" placeholder="Nhập mã phòng">
-        <button id="join">
-          Tham gia
-        </button>
-      </div>
+  socket.on("join-room", ({ room, name, create }) => {
+    name = String(name || "Khách").trim().substring(0, 40);
 
-    </div>
-  </div>
+    if (create === true) {
+      room = createRoomId();
+      rooms.set(room, {
+        host: socket.id,
+        locked: false,
+        pinnedForAll: true,
+        users: new Map()
+      });
+      console.log("Room created:", room);
+    }
 
+    room = String(room || "").trim().toUpperCase();
+    const currentRoom = rooms.get(room);
 
-  <div id="meeting" class="meeting hidden">
+    if (!currentRoom) {
+      socket.emit("room-error", { message: "Không tìm thấy phòng." });
+      return;
+    }
 
-    <header>
+    if (currentRoom.locked && currentRoom.host !== socket.id) {
+      socket.emit("room-locked", { message: "Phòng đang bị khóa." });
+      return;
+    }
 
-      <div class="logo small">
-        V<span>Meet</span>
-      </div>
+    const user = {
+      id: socket.id,
+      name: name || "Khách",
+      isHost: currentRoom.host === socket.id,
+      micEnabled: true,
+      cameraEnabled: true,
+      micLocked: false,
+      cameraLocked: false
+    };
 
-      <div id="roomTitle"></div>
+    currentRoom.users.set(socket.id, user);
+    socket.data.room = room;
+    socket.data.name = user.name;
+    socket.join(room);
 
-      <button id="copy">
-        🔗 Mời
-      </button>
+    socket.emit("room-joined", {
+      room: room,
+      isHost: user.isHost,
+      pinnedForAll: currentRoom.pinnedForAll
+    });
 
-    </header>
+    socket.to(room).emit("user-joined", user);
+    sendParticipants(room);
+    console.log(`${user.name} joined ${room}`);
+  });
 
+  socket.on("signal", ({ to, data }) => {
+    if (!to) return;
+    io.to(to).emit("signal", { from: socket.id, data: data });
+  });
 
-    <main>
+  socket.on("chat", ({ text }) => {
+    const room = rooms.get(socket.data.room);
+    if (!room) return;
+    const user = room.users.get(socket.id);
+    if (!user) return;
 
-      <section class="videos" id="videos">
+    text = String(text || "").trim().substring(0, 500);
+    if (!text) return;
 
-        <div class="video-tile local">
+    io.to(socket.data.room).emit("chat", { name: user.name, text: text });
+  });
 
-          <video
-            id="localVideo"
-            autoplay
-            muted
-            playsinline>
-          </video>
+  socket.on("host-toggle-pin", () => {
+    const room = rooms.get(socket.data.room);
+    if (!room || room.host !== socket.id) return;
 
-          <span id="localName"></span>
+    room.pinnedForAll = !room.pinnedForAll;
+    io.to(socket.data.room).emit("host-pin-changed", {
+      pinned: room.pinnedForAll,
+      hostId: room.host
+    });
+  });
 
-        </div>
+  socket.on("host-mute-user", ({ userId }) => {
+    const room = rooms.get(socket.data.room);
+    if (!room || room.host !== socket.id) return;
+    const user = room.users.get(userId);
+    if (!user) return;
 
-      </section>
+    user.micEnabled = false;
+    user.micLocked = true;
+    io.to(userId).emit("force-mute", { locked: true });
+    sendParticipants(socket.data.room);
+  });
 
+  socket.on("host-camera-off", ({ userId }) => {
+    const room = rooms.get(socket.data.room);
+    if (!room || room.host !== socket.id) return;
+    const user = room.users.get(userId);
+    if (!user) return;
 
-      <aside class="chat">
+    user.cameraEnabled = false;
+    user.cameraLocked = true;
+    io.to(userId).emit("force-camera-off", { locked: true });
+    sendParticipants(socket.data.room);
+  });
 
-        <h3>💬 Bình luận</h3>
+  socket.on("host-mute-all", () => {
+    const room = rooms.get(socket.data.room);
+    if (!room || room.host !== socket.id) return;
 
-        <div id="messages"></div>
+    room.users.forEach((user) => {
+      if (user.id === socket.id) return;
+      user.micEnabled = false;
+      user.micLocked = true;
+      io.to(user.id).emit("force-mute", { locked: true });
+    });
+    sendParticipants(socket.data.room);
+  });
 
-        <form id="chatForm">
+  socket.on("host-camera-off-all", () => {
+    const room = rooms.get(socket.data.room);
+    if (!room || room.host !== socket.id) return;
 
-          <input
-            id="chatInput"
-            placeholder="Viết bình luận...">
+    room.users.forEach((user) => {
+      if (user.id === socket.id) return;
+      user.cameraEnabled = false;
+      user.cameraLocked = true;
+      io.to(user.id).emit("force-camera-off", { locked: true });
+    });
+    sendParticipants(socket.data.room);
+  });
 
-          <button>
-            Gửi
-          </button>
+  socket.on("host-unlock-all-mic", () => {
+    const room = rooms.get(socket.data.room);
+    if (!room || room.host !== socket.id) return;
 
-        </form>
+    room.users.forEach((user) => {
+      user.micLocked = false;
+      io.to(user.id).emit("unlock-mic");
+    });
+    sendParticipants(socket.data.room);
+  });
 
-      </aside>
+  socket.on("host-unlock-all-camera", () => {
+    const room = rooms.get(socket.data.room);
+    if (!room || room.host !== socket.id) return;
 
-    </main>
+    room.users.forEach((user) => {
+      user.cameraLocked = false;
+      io.to(user.id).emit("unlock-camera");
+    });
+    sendParticipants(socket.data.room);
+  });
 
+  socket.on("host-remove-user", ({ userId }) => {
+    const room = rooms.get(socket.data.room);
+    if (!room || room.host !== socket.id || userId === socket.id) return;
 
-    <footer>
+    room.users.delete(userId);
+    const target = io.sockets.sockets.get(userId);
+    if (target) {
+      target.leave(socket.data.room);
+      target.data.room = null;
+      target.emit("removed-from-room");
+    }
+    sendParticipants(socket.data.room);
+  });
 
-      <button id="mic">
-        🎤 Mic
-      </button>
+  socket.on("host-toggle-lock", () => {
+    const room = rooms.get(socket.data.room);
+    if (!room || room.host !== socket.id) return;
 
-      <button id="cam">
-        📷 Camera
-      </button>
+    room.locked = !room.locked;
+    io.to(socket.data.room).emit("room-lock-changed", { locked: room.locked });
+  });
 
-      <button id="screen">
-        🖥️ Chia sẻ màn hình
-      </button>
+  socket.on("end-meeting", () => {
+    const roomId = socket.data.room;
+    const room = rooms.get(roomId);
+    if (!room || room.host !== socket.id) return;
 
-      <button id="leave" class="danger">
-        ☎ Rời phòng
-      </button>
+    io.to(roomId).emit("meeting-ended");
+    rooms.delete(roomId);
+    console.log("Meeting ended:", roomId);
+  });
 
-    </footer>
+  socket.on("leave-room", () => {
+    leaveRoom(socket);
+  });
 
-  </div>
+  socket.on("disconnect", () => {
+    leaveRoom(socket);
+    console.log("User disconnected:", socket.id);
+  });
+});
 
+function leaveRoom(socket) {
+  const roomId = socket.data.room;
+  if (!roomId) return;
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="app.js"></script>
+  const room = rooms.get(roomId);
+  if (!room) {
+    socket.data.room = null;
+    return;
+  }
 
-</body>
-</html>
+  if (room.host === socket.id) {
+    io.to(roomId).emit("meeting-ended");
+    rooms.delete(roomId);
+    socket.data.room = null;
+    return;
+  }
+
+  room.users.delete(socket.id);
+  socket.leave(roomId);
+  io.to(roomId).emit("user-left", { id: socket.id });
+  sendParticipants(roomId);
+  socket.data.room = null;
+}
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`VMeet server running on port ${PORT}`);
+});
