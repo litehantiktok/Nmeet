@@ -1,10 +1,19 @@
+// =====================================================
+// VMEET - APP.JS
+// =====================================================
+
 const socket = io();
 
-const $ = (id) => document.getElementById(id);
+// =====================================================
+// HELPER
+// =====================================================
 
-// ===============================
+const $ = (id) =>
+  document.getElementById(id);
+
+// =====================================================
 // ELEMENTS
-// ===============================
+// =====================================================
 
 const home = $("home");
 const prejoin = $("prejoin");
@@ -18,53 +27,115 @@ const joinInfo = $("joinInfo");
 const previewVideo = $("previewVideo");
 const previewMic = $("previewMic");
 const previewCam = $("previewCam");
-const previewCameraOff = $("previewCameraOff");
+const previewCameraOff =
+  $("previewCameraOff");
 const previewName = $("previewName");
 
-const enterMeeting = $("enterMeeting");
-const cancelPrejoin = $("cancelPrejoin");
+const enterMeeting =
+  $("enterMeeting");
 
-const localVideo = $("localVideo");
-const localTile = $("localTile");
-const localName = $("localName");
-const localHostBadge = $("localHostBadge");
-const localCameraOff = $("localCameraOff");
+const cancelPrejoin =
+  $("cancelPrejoin");
 
-const roomTitle = $("roomTitle");
-const videos = $("videos");
+const localVideo =
+  $("localVideo");
 
-const micBtn = $("mic");
-const camBtn = $("cam");
-const switchCameraBtn = $("switchCamera");
-const screenBtn = $("screen");
-const leaveBtn = $("leave");
-const copyBtn = $("copy");
+const localTile =
+  $("localTile");
 
-const participantsBtn = $("participantsBtn");
-const participantsPanel = $("participantsPanel");
-const closeParticipants = $("closeParticipants");
-const participantsList = $("participantsList");
+const localName =
+  $("localName");
 
-const hostControls = $("hostControls");
-const pinHost = $("pinHost");
-const muteAll = $("muteAll");
-const cameraOffAll = $("cameraOffAll");
-const unlockAllMic = $("unlockAllMic");
-const unlockAllCamera = $("unlockAllCamera");
-const lockRoom = $("lockRoom");
+const localHostBadge =
+  $("localHostBadge");
 
-const chatBtn = $("chatBtn");
-const chatPanel = $("chatPanel");
-const closeChat = $("closeChat");
-const chatForm = $("chatForm");
-const chatInput = $("chatInput");
-const messages = $("messages");
+const localCameraOff =
+  $("localCameraOff");
 
-const toast = $("toast");
+const roomTitle =
+  $("roomTitle");
 
-// ===============================
+const prejoinRoom =
+  $("prejoinRoom");
+
+const videos =
+  $("videos");
+
+const micBtn =
+  $("mic");
+
+const camBtn =
+  $("cam");
+
+const switchCameraBtn =
+  $("switchCamera");
+
+const screenBtn =
+  $("screen");
+
+const leaveBtn =
+  $("leave");
+
+const copyBtn =
+  $("copy");
+
+const participantsBtn =
+  $("participantsBtn");
+
+const participantsPanel =
+  $("participantsPanel");
+
+const closeParticipants =
+  $("closeParticipants");
+
+const participantsList =
+  $("participantsList");
+
+const hostControls =
+  $("hostControls");
+
+const pinHost =
+  $("pinHost");
+
+const muteAll =
+  $("muteAll");
+
+const cameraOffAll =
+  $("cameraOffAll");
+
+const unlockAllMic =
+  $("unlockAllMic");
+
+const unlockAllCamera =
+  $("unlockAllCamera");
+
+const lockRoom =
+  $("lockRoom");
+
+const chatBtn =
+  $("chatBtn");
+
+const chatPanel =
+  $("chatPanel");
+
+const closeChat =
+  $("closeChat");
+
+const chatForm =
+  $("chatForm");
+
+const chatInput =
+  $("chatInput");
+
+const messages =
+  $("messages");
+
+const toast =
+  $("toast");
+
+// =====================================================
 // STATE
-// ===============================
+// =====================================================
 
 let localStream = null;
 let screenStream = null;
@@ -74,6 +145,7 @@ let myName = "";
 let isHost = false;
 
 let cameraFacing = "user";
+
 let participants = [];
 
 let previewReady = false;
@@ -84,108 +156,154 @@ let pinnedHostId = null;
 const peerConnections = {};
 const pendingCandidates = {};
 
-const urlParams = new URLSearchParams(
-  window.location.search
-);
+const urlParams =
+  new URLSearchParams(
+    window.location.search
+  );
 
-const invitedRoom = urlParams.get("room");
+const invitedRoom =
+  urlParams.get("room");
 
-// ===============================
-// WEBRTC
-// ===============================
+// =====================================================
+// WEBRTC CONFIG
+// =====================================================
 
 const configuration = {
   iceServers: [
     {
-      urls: "stun:stun.l.google.com:19302"
+      urls:
+        "stun:stun.l.google.com:19302"
     },
     {
-      urls: "stun:stun1.l.google.com:19302"
+      urls:
+        "stun:stun1.l.google.com:19302"
     }
   ]
 };
 
-// ===============================
+// =====================================================
 // TOAST
-// ===============================
+// =====================================================
 
 function showToast(message) {
   if (!toast) return;
 
-  toast.textContent = message;
-  toast.classList.remove("hidden");
+  toast.textContent =
+    String(message);
 
-  clearTimeout(showToast.timer);
+  toast.classList.remove(
+    "hidden"
+  );
 
-  showToast.timer = setTimeout(() => {
-    toast.classList.add("hidden");
-  }, 2500);
+  clearTimeout(
+    showToast.timer
+  );
+
+  showToast.timer =
+    setTimeout(() => {
+      toast.classList.add(
+        "hidden"
+      );
+    }, 2500);
 }
 
-// ===============================
+// =====================================================
 // MEDIA SUPPORT
-// ===============================
+// =====================================================
 
 function hasMediaSupport() {
-  return (
+  return Boolean(
     navigator.mediaDevices &&
-    typeof navigator.mediaDevices.getUserMedia === "function"
+      navigator.mediaDevices
+        .getUserMedia
   );
 }
 
-// ===============================
+// =====================================================
 // START PREVIEW
-// ===============================
+// =====================================================
 
 async function startPreview() {
   if (!hasMediaSupport()) {
     showToast(
-      "Trình duyệt không hỗ trợ Camera/Micro."
+      "Trình duyệt không hỗ trợ Camera/Mic."
     );
+
     return false;
   }
 
-  myName = nameInput.value.trim();
+  myName =
+    String(
+      nameInput?.value || ""
+    ).trim();
 
   if (!myName) {
-    showToast("Vui lòng nhập tên của bạn.");
-    nameInput.focus();
+    showToast(
+      "Vui lòng nhập tên của bạn."
+    );
+
+    nameInput?.focus();
+
     return false;
   }
 
   try {
+    // Nếu chưa có stream
     if (!localStream) {
       localStream =
-        await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: cameraFacing,
-            width: {
-              ideal: 1280
+        await navigator.mediaDevices.getUserMedia(
+          {
+            video: {
+              facingMode:
+                cameraFacing,
+
+              width: {
+                ideal: 1280
+              },
+
+              height: {
+                ideal: 720
+              }
             },
-            height: {
-              ideal: 720
-            }
-          },
-          audio: true
-        });
+
+            audio: true
+          }
+        );
     }
 
-    previewVideo.srcObject = localStream;
-    previewVideo.muted = true;
-    previewVideo.playsInline = true;
+    if (previewVideo) {
+      previewVideo.srcObject =
+        localStream;
 
-    try {
-      await previewVideo.play();
-    } catch (error) {
-      console.log(
-        "Preview play:",
-        error
+      previewVideo.muted =
+        true;
+
+      previewVideo.playsInline =
+        true;
+
+      try {
+        await previewVideo.play();
+      } catch {}
+    }
+
+    if (previewName) {
+      previewName.textContent =
+        myName;
+    }
+
+    if (prejoin) {
+      prejoin.classList.remove(
+        "hidden"
       );
     }
 
-    previewName.textContent = myName;
-
-    prejoin.classList.remove("hidden");
+    if (prejoinRoom) {
+      prejoinRoom.textContent =
+        invitedRoom
+          ? "Phòng " +
+            invitedRoom.toUpperCase()
+          : "Phòng mới";
+    }
 
     updatePreviewButtons();
 
@@ -208,9 +326,9 @@ async function startPreview() {
   }
 }
 
-// ===============================
+// =====================================================
 // PREVIEW BUTTONS
-// ===============================
+// =====================================================
 
 function updatePreviewButtons() {
   if (!localStream) return;
@@ -263,79 +381,88 @@ function updatePreviewButtons() {
   }
 }
 
-if (previewMic) {
-  previewMic.addEventListener(
-    "click",
-    () => {
-      if (!localStream) return;
+// =====================================================
+// PREVIEW MIC
+// =====================================================
 
-      const track =
-        localStream.getAudioTracks()[0];
+previewMic?.addEventListener(
+  "click",
+  () => {
+    if (!localStream) return;
 
-      if (!track) {
-        showToast(
-          "Không tìm thấy microphone."
-        );
-        return;
-      }
+    const track =
+      localStream.getAudioTracks()[0];
 
-      track.enabled =
-        !track.enabled;
+    if (!track) {
+      showToast(
+        "Không tìm thấy microphone."
+      );
 
-      updatePreviewButtons();
+      return;
     }
-  );
-}
 
-if (previewCam) {
-  previewCam.addEventListener(
-    "click",
-    () => {
-      if (!localStream) return;
+    track.enabled =
+      !track.enabled;
 
-      const track =
-        localStream.getVideoTracks()[0];
+    updatePreviewButtons();
+  }
+);
 
-      if (!track) {
-        showToast(
-          "Không tìm thấy camera."
-        );
-        return;
-      }
+// =====================================================
+// PREVIEW CAMERA
+// =====================================================
 
-      track.enabled =
-        !track.enabled;
+previewCam?.addEventListener(
+  "click",
+  () => {
+    if (!localStream) return;
 
-      updatePreviewButtons();
+    const track =
+      localStream.getVideoTracks()[0];
+
+    if (!track) {
+      showToast(
+        "Không tìm thấy camera."
+      );
+
+      return;
     }
-  );
-}
 
-// ===============================
-// CREATE ROOM
-// ===============================
+    track.enabled =
+      !track.enabled;
 
-createBtn.addEventListener(
+    updatePreviewButtons();
+  }
+);
+
+// =====================================================
+// CREATE ROOM BUTTON
+// =====================================================
+
+createBtn?.addEventListener(
   "click",
   async () => {
     if (enteringRoom) return;
 
     myName =
-      nameInput.value.trim();
+      String(
+        nameInput?.value || ""
+      ).trim();
 
     if (!myName) {
       showToast(
         "Vui lòng nhập tên của bạn."
       );
 
-      nameInput.focus();
+      nameInput?.focus();
 
       return;
     }
 
-    // Lần 1: mở camera
+    // Lần đầu -> mở preview
     if (!previewReady) {
-      createBtn.disabled = true;
+      createBtn.disabled =
+        true;
 
       createBtn.textContent =
         "Đang mở camera...";
@@ -343,7 +470,8 @@ createBtn.addEventListener(
       const success =
         await startPreview();
 
-      createBtn.disabled = false;
+      createBtn.disabled =
+        false;
 
       if (!success) {
         createBtn.textContent =
@@ -362,58 +490,47 @@ createBtn.addEventListener(
       return;
     }
 
-    // Lần 2: tạo phòng
-    enteringRoom = true;
-
-    createBtn.disabled = true;
-
-    createBtn.textContent =
-      "Đang tạo cuộc họp...";
-
-    socket.emit(
-      "join-room",
-      {
-        room: "",
-        name: myName,
-        create: true
-      }
-    );
+    // Lần 2 -> tạo phòng
+    enterRoom(true);
   }
 );
 
-// ===============================
-// JOIN INVITED ROOM
-// ===============================
+// =====================================================
+// JOIN INVITED ROOM BUTTON
+// =====================================================
 
 if (invitedRoom) {
-  joinInfo.classList.remove(
+  joinInfo?.classList.remove(
     "hidden"
   );
 
-  joinBtn.classList.remove(
+  joinBtn?.classList.remove(
     "hidden"
   );
 
-  joinBtn.addEventListener(
+  joinBtn?.addEventListener(
     "click",
     async () => {
       if (enteringRoom) return;
 
       myName =
-        nameInput.value.trim();
+        String(
+          nameInput?.value || ""
+        ).trim();
 
       if (!myName) {
         showToast(
           "Vui lòng nhập tên của bạn."
         );
 
-        nameInput.focus();
+        nameInput?.focus();
 
         return;
       }
 
       if (!previewReady) {
-        joinBtn.disabled = true;
+        joinBtn.disabled =
+          true;
 
         joinBtn.textContent =
           "Đang mở camera...";
@@ -421,7 +538,8 @@ if (invitedRoom) {
         const success =
           await startPreview();
 
-        joinBtn.disabled = false;
+        joinBtn.disabled =
+          false;
 
         if (!success) {
           joinBtn.textContent =
@@ -440,122 +558,171 @@ if (invitedRoom) {
         return;
       }
 
-      enteringRoom = true;
+      enterRoom(false);
+    }
+  );
+}
 
-      joinBtn.disabled = true;
+// =====================================================
+// ENTER ROOM
+// =====================================================
+
+function enterRoom(create) {
+  if (enteringRoom) return;
+
+  if (!localStream) {
+    showToast(
+      "Camera chưa sẵn sàng."
+    );
+
+    return;
+  }
+
+  myName =
+    String(
+      nameInput?.value || ""
+    ).trim();
+
+  if (!myName) {
+    showToast(
+      "Vui lòng nhập tên của bạn."
+    );
+
+    return;
+  }
+
+  enteringRoom = true;
+
+  if (create) {
+    if (createBtn) {
+      createBtn.disabled =
+        true;
+
+      createBtn.textContent =
+        "Đang tạo cuộc họp...";
+    }
+  } else {
+    if (joinBtn) {
+      joinBtn.disabled =
+        true;
 
       joinBtn.textContent =
         "Đang vào phòng...";
+    }
+  }
 
-      socket.emit(
-        "join-room",
-        {
-          room: invitedRoom,
-          name: myName,
-          create: false
-        }
+  if (enterMeeting) {
+    enterMeeting.disabled =
+      true;
+
+    enterMeeting.textContent =
+      "Đang vào cuộc họp...";
+  }
+
+  socket.emit(
+    "join-room",
+    {
+      room:
+        create
+          ? ""
+          : invitedRoom,
+
+      name: myName,
+
+      create
+    }
+  );
+}
+
+// =====================================================
+// PREJOIN ENTER BUTTON
+// =====================================================
+
+enterMeeting?.addEventListener(
+  "click",
+  () => {
+    if (enteringRoom) return;
+
+    myName =
+      String(
+        nameInput?.value || ""
+      ).trim();
+
+    if (!myName) {
+      showToast(
+        "Vui lòng nhập tên của bạn."
       );
+
+      return;
     }
-  );
-}
 
-// ===============================
-// PREJOIN ENTER
-// ===============================
+    if (
+      !previewReady ||
+      !localStream
+    ) {
+      showToast(
+        "Camera chưa sẵn sàng."
+      );
 
-if (enterMeeting) {
-  enterMeeting.addEventListener(
-    "click",
-    () => {
-      if (enteringRoom) return;
-
-      myName =
-        nameInput.value.trim();
-
-      if (!myName) {
-        showToast(
-          "Vui lòng nhập tên của bạn."
-        );
-
-        return;
-      }
-
-      if (
-        !previewReady ||
-        !localStream
-      ) {
-        showToast(
-          "Camera chưa sẵn sàng."
-        );
-
-        return;
-      }
-
-      enteringRoom = true;
-
-      enterMeeting.disabled = true;
-
-      enterMeeting.textContent =
-        "Đang vào cuộc họp...";
-
-      if (invitedRoom) {
-        socket.emit(
-          "join-room",
-          {
-            room: invitedRoom,
-            name: myName,
-            create: false
-          }
-        );
-      } else {
-        socket.emit(
-          "join-room",
-          {
-            room: "",
-            name: myName,
-            create: true
-          }
-        );
-      }
+      return;
     }
-  );
-}
 
-// ===============================
+    // Link có room -> tham gia
+    if (invitedRoom) {
+      enterRoom(false);
+    } else {
+      // Không có room -> tạo
+      enterRoom(true);
+    }
+  }
+);
+
+// =====================================================
 // CANCEL PREJOIN
-// ===============================
+// =====================================================
 
-if (cancelPrejoin) {
-  cancelPrejoin.addEventListener(
-    "click",
-    () => {
-      prejoin.classList.add(
-        "hidden"
-      );
+cancelPrejoin?.addEventListener(
+  "click",
+  () => {
+    prejoin?.classList.add(
+      "hidden"
+    );
 
-      enteringRoom = false;
+    enteringRoom = false;
 
-      createBtn.disabled = false;
-      joinBtn.disabled = false;
+    if (createBtn) {
+      createBtn.disabled =
+        false;
 
       createBtn.textContent =
         previewReady
           ? "➕ Vào phòng với tư cách chủ phòng"
           : "➕ Tạo cuộc họp mới";
-
-      if (invitedRoom) {
-        joinBtn.textContent =
-          previewReady
-            ? "🚪 Vào cuộc họp"
-            : "🚪 Tham gia cuộc họp";
-      }
     }
-  );
-}
 
-// ===============================
+    if (joinBtn) {
+      joinBtn.disabled =
+        false;
+
+      joinBtn.textContent =
+        previewReady
+          ? "🚪 Vào cuộc họp"
+          : "🚪 Tham gia cuộc họp";
+    }
+
+    if (enterMeeting) {
+      enterMeeting.disabled =
+        false;
+
+      enterMeeting.textContent =
+        "🚪 Vào cuộc họp";
+    }
+  }
+);
+
+// =====================================================
 // ROOM JOINED
-// ===============================
+// =====================================================
 
 socket.on(
   "room-joined",
@@ -565,7 +732,8 @@ socket.on(
       data
     );
 
-    roomId = data.room;
+    roomId =
+      data.room;
 
     isHost =
       Boolean(data.isHost);
@@ -573,60 +741,64 @@ socket.on(
     pinnedHostId =
       isHost
         ? socket.id
-        : null;
+        : data.hostId || null;
 
-    home.classList.add(
+    home?.classList.add(
       "hidden"
     );
 
-    prejoin.classList.add(
+    prejoin?.classList.add(
       "hidden"
     );
 
-    meeting.classList.remove(
+    meeting?.classList.remove(
       "hidden"
     );
 
-    roomTitle.textContent =
-      "Phòng " + roomId;
+    if (roomTitle) {
+      roomTitle.textContent =
+        "Phòng " + roomId;
+    }
 
-    localName.textContent =
-      myName;
+    if (localName) {
+      localName.textContent =
+        myName;
+    }
 
-    localTile.dataset.userId =
-      socket.id;
+    if (localTile) {
+      localTile.dataset.userId =
+        socket.id;
+    }
 
-    if (localStream) {
+    if (localVideo && localStream) {
       localVideo.srcObject =
         localStream;
 
-      localVideo.muted = true;
-      localVideo.playsInline = true;
+      localVideo.muted =
+        true;
+
+      localVideo.playsInline =
+        true;
 
       try {
         await localVideo.play();
-      } catch (error) {
-        console.log(
-          "Local video play:",
-          error
-        );
-      }
+      } catch {}
     }
 
     if (isHost) {
-      localHostBadge.classList.remove(
+      localHostBadge?.classList.remove(
         "hidden"
       );
 
-      hostControls.classList.remove(
+      hostControls?.classList.remove(
         "hidden"
       );
     } else {
-      localHostBadge.classList.add(
+      localHostBadge?.classList.add(
         "hidden"
       );
 
-      hostControls.classList.add(
+      hostControls?.classList.add(
         "hidden"
       );
     }
@@ -639,8 +811,15 @@ socket.on(
 
     enteringRoom = false;
 
-    createBtn.disabled = false;
-    joinBtn.disabled = false;
+    if (createBtn) {
+      createBtn.disabled =
+        false;
+    }
+
+    if (joinBtn) {
+      joinBtn.disabled =
+        false;
+    }
 
     if (enterMeeting) {
       enterMeeting.disabled =
@@ -658,9 +837,9 @@ socket.on(
   }
 );
 
-// ===============================
+// =====================================================
 // SHARE LINK
-// ===============================
+// =====================================================
 
 function createShareLink() {
   if (!roomId) return;
@@ -668,37 +847,45 @@ function createShareLink() {
   const url =
     window.location.origin +
     "?room=" +
-    encodeURIComponent(roomId);
+    encodeURIComponent(
+      roomId
+    );
 
-  history.replaceState(
-    null,
-    "",
-    "?room=" +
-      encodeURIComponent(roomId)
-  );
+  try {
+    history.replaceState(
+      null,
+      "",
+      "?room=" +
+        encodeURIComponent(
+          roomId
+        )
+    );
+  } catch {}
 
-  copyBtn.onclick =
-    async () => {
-      try {
-        await navigator.clipboard.writeText(
-          url
-        );
+  if (copyBtn) {
+    copyBtn.onclick =
+      async () => {
+        try {
+          await navigator.clipboard.writeText(
+            url
+          );
 
-        showToast(
-          "Đã sao chép link cuộc họp."
-        );
-      } catch (error) {
-        window.prompt(
-          "Sao chép link này:",
-          url
-        );
-      }
-    };
+          showToast(
+            "Đã sao chép link cuộc họp."
+          );
+        } catch {
+          window.prompt(
+            "Sao chép link này:",
+            url
+          );
+        }
+      };
+  }
 }
 
-// ===============================
+// =====================================================
 // PARTICIPANTS
-// ===============================
+// =====================================================
 
 socket.on(
   "participants",
@@ -725,8 +912,14 @@ socket.on(
   }
 );
 
+// =====================================================
+// UPDATE PARTICIPANTS
+// =====================================================
+
 function updateParticipants() {
-  if (!participantsList) return;
+  if (!participantsList) {
+    return;
+  }
 
   participantsList.innerHTML =
     "";
@@ -754,6 +947,7 @@ function updateParticipants() {
 
       row.appendChild(name);
 
+      // HOST CONTROLS
       if (
         isHost &&
         user.id !== socket.id
@@ -769,12 +963,16 @@ function updateParticipants() {
         mute.title =
           "Tắt mic";
 
+        mute.type =
+          "button";
+
         mute.onclick =
           () => {
             socket.emit(
               "host-mute-user",
               {
-                userId: user.id
+                userId:
+                  user.id
               }
             );
           };
@@ -790,12 +988,16 @@ function updateParticipants() {
         cam.title =
           "Tắt camera";
 
+        cam.type =
+          "button";
+
         cam.onclick =
           () => {
             socket.emit(
               "host-camera-off",
               {
-                userId: user.id
+                userId:
+                  user.id
               }
             );
           };
@@ -811,20 +1013,25 @@ function updateParticipants() {
         remove.title =
           "Đuổi khỏi phòng";
 
+        remove.type =
+          "button";
+
         remove.onclick =
           () => {
-            if (
-              confirm(
+            const ok =
+              window.confirm(
                 "Bạn có chắc muốn đuổi người này?"
-              )
-            ) {
-              socket.emit(
-                "host-remove-user",
-                {
-                  userId: user.id
-                }
               );
-            }
+
+            if (!ok) return;
+
+            socket.emit(
+              "host-remove-user",
+              {
+                userId:
+                  user.id
+              }
+            );
           };
 
         row.appendChild(mute);
@@ -839,17 +1046,15 @@ function updateParticipants() {
   );
 }
 
-// ===============================
-// PEER CONNECTION
-// ===============================
+// =====================================================
+// CREATE PEER CONNECTION
+// =====================================================
 
 function createPeerConnection(
   remoteId
 ) {
   if (
-    peerConnections[
-      remoteId
-    ]
+    peerConnections[remoteId]
   ) {
     return peerConnections[
       remoteId
@@ -861,13 +1066,16 @@ function createPeerConnection(
       configuration
     );
 
-  peerConnections[
-    remoteId
-  ] = pc;
+  peerConnections[remoteId] =
+    pc;
 
   pendingCandidates[
     remoteId
   ] = [];
+
+  // -----------------------------
+  // ADD LOCAL TRACKS
+  // -----------------------------
 
   if (localStream) {
     localStream
@@ -882,36 +1090,55 @@ function createPeerConnection(
       );
   }
 
+  // -----------------------------
+  // REMOTE TRACK
+  // -----------------------------
+
   pc.ontrack =
     (event) => {
       const stream =
         event.streams &&
         event.streams[0];
 
-      if (stream) {
-        createRemoteVideo(
-          remoteId,
-          stream
-        );
-      }
+      if (!stream) return;
+
+      createRemoteVideo(
+        remoteId,
+        stream
+      );
     };
+
+  // -----------------------------
+  // ICE
+  // -----------------------------
 
   pc.onicecandidate =
     (event) => {
-      if (!event.candidate) return;
+      if (
+        !event.candidate
+      ) {
+        return;
+      }
 
       socket.emit(
         "signal",
         {
           to: remoteId,
+
           data: {
-            type: "candidate",
+            type:
+              "candidate",
+
             candidate:
               event.candidate
           }
         }
       );
     };
+
+  // -----------------------------
+  // CONNECTION STATE
+  // -----------------------------
 
   pc.onconnectionstatechange =
     () => {
@@ -939,21 +1166,26 @@ function createPeerConnection(
   return pc;
 }
 
-// ===============================
-// REMOTE VIDEO
-// ===============================
+// =====================================================
+// CREATE REMOTE VIDEO
+// =====================================================
 
 function createRemoteVideo(
   userId,
   stream
 ) {
+  if (!videos) return;
+
   // FIX QUAN TRỌNG:
-  // phải dùng backtick ở querySelector
+  // Phải dùng backtick ở selector.
   let tile =
     document.querySelector(
-      [data-user-id="${CSS.escape(         userId       )}"]
+      `[data-user-id="${CSS.escape(
+        userId
+      )}"]`
     );
 
+  // Nếu chưa có tile
   if (!tile) {
     tile =
       document.createElement(
@@ -971,10 +1203,15 @@ function createRemoteVideo(
         "video"
       );
 
-    video.autoplay = true;
-    video.playsInline = true;
+    video.autoplay =
+      true;
 
-    tile.appendChild(video);
+    video.playsInline =
+      true;
+
+    tile.appendChild(
+      video
+    );
 
     const name =
       document.createElement(
@@ -998,7 +1235,9 @@ function createRemoteVideo(
             : "")
         : "Người tham gia";
 
-    tile.appendChild(name);
+    tile.appendChild(
+      name
+    );
 
     const badge =
       document.createElement(
@@ -1011,7 +1250,9 @@ function createRemoteVideo(
     badge.textContent =
       "📌 Đã ghim";
 
-    tile.appendChild(badge);
+    tile.appendChild(
+      badge
+    );
 
     videos.appendChild(
       tile
@@ -1024,26 +1265,31 @@ function createRemoteVideo(
     );
 
   if (
-    video.srcObject !== stream
+    video &&
+    video.srcObject !==
+      stream
   ) {
     video.srcObject =
       stream;
   }
 
-  video
-    .play()
-    .catch(() => {});
+  if (video) {
+    video.play().catch(
+      () => {}
+    );
+  }
 
   applyPinnedHost();
 }
 
-// ===============================
-// PIN HOST
-// ===============================
+// =====================================================
+// APPLY PINNED HOST
+// =====================================================
 
 function applyPinnedHost() {
   if (!videos) return;
 
+  // Nếu chưa có host
   if (!pinnedHostId) {
     const host =
       participants.find(
@@ -1058,7 +1304,7 @@ function applyPinnedHost() {
   }
 
   let thumbWrapper =
-    document.querySelector(
+    videos.querySelector(
       ".videos-thumb-wrapper"
     );
 
@@ -1076,66 +1322,65 @@ function applyPinnedHost() {
     );
   }
 
-  document
-    .querySelectorAll(
+  const tiles =
+    videos.querySelectorAll(
       ".video-tile"
-    )
-    .forEach(
-      (tile) => {
-        const id =
-          tile.dataset.userId;
-
-        const badge =
-          tile.querySelector(
-            ".pinned-badge"
-          );
-
-        if (
-          id === pinnedHostId
-        ) {
-          tile.classList.add(
-            "pinned-tile"
-          );
-
-          if (badge) {
-            badge.classList.remove(
-              "hidden"
-            );
-          }
-
-          videos.insertBefore(
-            tile,
-            thumbWrapper
-          );
-        } else {
-          tile.classList.remove(
-            "pinned-tile"
-          );
-
-          if (badge) {
-            badge.classList.add(
-              "hidden"
-            );
-          }
-
-          thumbWrapper.appendChild(
-            tile
-          );
-        }
-      }
     );
+
+  tiles.forEach(
+    (tile) => {
+      const id =
+        tile.dataset.userId;
+
+      const badge =
+        tile.querySelector(
+          ".pinned-badge"
+        );
+
+      if (
+        id === pinnedHostId
+      ) {
+        tile.classList.add(
+          "pinned-tile"
+        );
+
+        badge?.classList.remove(
+          "hidden"
+        );
+
+        videos.insertBefore(
+          tile,
+          thumbWrapper
+        );
+      } else {
+        tile.classList.remove(
+          "pinned-tile"
+        );
+
+        badge?.classList.add(
+          "hidden"
+        );
+
+        thumbWrapper.appendChild(
+          tile
+        );
+      }
+    }
+  );
 }
 
-// ===============================
-// REMOVE REMOTE
-// ===============================
+// =====================================================
+// REMOVE REMOTE VIDEO
+// =====================================================
 
 function removeRemoteVideo(
   userId
 ) {
   const tile =
     document.querySelector(
-      [data-user-id="${CSS.escape(         userId       )}"]
+      `[data-user-id="${CSS.escape(
+        userId
+      )}"]`
     );
 
   if (
@@ -1152,7 +1397,7 @@ function removeRemoteVideo(
       peerConnections[
         userId
       ].close();
-    } catch (error) {}
+    } catch {}
 
     delete peerConnections[
       userId
@@ -1166,9 +1411,9 @@ function removeRemoteVideo(
   applyPinnedHost();
 }
 
-// ===============================
+// =====================================================
 // USER JOINED
-// ===============================
+// =====================================================
 
 socket.on(
   "user-joined",
@@ -1197,8 +1442,10 @@ socket.on(
         "signal",
         {
           to: user.id,
+
           data: {
             type: "offer",
+
             offer:
               pc.localDescription
           }
@@ -1213,16 +1460,16 @@ socket.on(
   }
 );
 
-// ===============================
+// =====================================================
 // SIGNAL
-// ===============================
+// =====================================================
 
 socket.on(
   "signal",
   async ({
     from,
     data
-  }) => {
+  } = {}) => {
     if (
       !from ||
       !data
@@ -1236,8 +1483,13 @@ socket.on(
           from
         );
 
+      // ---------------------------
+      // OFFER
+      // ---------------------------
+
       if (
-        data.type === "offer"
+        data.type ===
+        "offer"
       ) {
         await pc.setRemoteDescription(
           new RTCSessionDescription(
@@ -1256,8 +1508,11 @@ socket.on(
           "signal",
           {
             to: from,
+
             data: {
-              type: "answer",
+              type:
+                "answer",
+
               answer:
                 pc.localDescription
             }
@@ -1271,8 +1526,13 @@ socket.on(
         return;
       }
 
+      // ---------------------------
+      // ANSWER
+      // ---------------------------
+
       if (
-        data.type === "answer"
+        data.type ===
+        "answer"
       ) {
         await pc.setRemoteDescription(
           new RTCSessionDescription(
@@ -1287,8 +1547,13 @@ socket.on(
         return;
       }
 
+      // ---------------------------
+      // ICE CANDIDATE
+      // ---------------------------
+
       if (
-        data.type === "candidate"
+        data.type ===
+        "candidate"
       ) {
         const candidate =
           new RTCIceCandidate(
@@ -1314,7 +1579,9 @@ socket.on(
 
           pendingCandidates[
             from
-          ].push(candidate);
+          ].push(
+            candidate
+          );
         }
       }
     } catch (error) {
@@ -1326,9 +1593,9 @@ socket.on(
   }
 );
 
-// ===============================
+// =====================================================
 // FLUSH ICE
-// ===============================
+// =====================================================
 
 async function flushCandidates(
   remoteId
@@ -1365,22 +1632,24 @@ async function flushCandidates(
   ] = [];
 }
 
-// ===============================
+// =====================================================
 // USER LEFT
-// ===============================
+// =====================================================
 
 socket.on(
   "user-left",
-  ({ id }) => {
+  ({ id } = {}) => {
     if (!id) return;
 
-    removeRemoteVideo(id);
+    removeRemoteVideo(
+      id
+    );
   }
 );
 
-// ===============================
+// =====================================================
 // LOCAL CAMERA OVERLAY
-// ===============================
+// =====================================================
 
 function updateLocalCameraOverlay() {
   if (!localStream) return;
@@ -1393,17 +1662,15 @@ function updateLocalCameraOverlay() {
       ? track.enabled
       : false;
 
-  if (localCameraOff) {
-    localCameraOff.classList.toggle(
-      "hidden",
-      enabled
-    );
-  }
+  localCameraOff?.classList.toggle(
+    "hidden",
+    enabled
+  );
 }
 
-// ===============================
+// =====================================================
 // MEETING BUTTONS
-// ===============================
+// =====================================================
 
 function updateMeetingButtons() {
   if (!localStream) return;
@@ -1437,11 +1704,11 @@ function updateMeetingButtons() {
   updateLocalCameraOverlay();
 }
 
-// ===============================
+// =====================================================
 // MIC
-// ===============================
+// =====================================================
 
-micBtn.addEventListener(
+micBtn?.addEventListener(
   "click",
   () => {
     if (!localStream) return;
@@ -1449,7 +1716,13 @@ micBtn.addEventListener(
     const track =
       localStream.getAudioTracks()[0];
 
-    if (!track) return;
+    if (!track) {
+      showToast(
+        "Không tìm thấy microphone."
+      );
+
+      return;
+    }
 
     track.enabled =
       !track.enabled;
@@ -1464,11 +1737,11 @@ micBtn.addEventListener(
   }
 );
 
-// ===============================
+// =====================================================
 // CAMERA
-// ===============================
+// =====================================================
 
-camBtn.addEventListener(
+camBtn?.addEventListener(
   "click",
   () => {
     if (!localStream) return;
@@ -1476,7 +1749,13 @@ camBtn.addEventListener(
     const track =
       localStream.getVideoTracks()[0];
 
-    if (!track) return;
+    if (!track) {
+      showToast(
+        "Không tìm thấy camera."
+      );
+
+      return;
+    }
 
     track.enabled =
       !track.enabled;
@@ -1491,11 +1770,11 @@ camBtn.addEventListener(
   }
 );
 
-// ===============================
+// =====================================================
 // SWITCH CAMERA
-// ===============================
+// =====================================================
 
-switchCameraBtn.addEventListener(
+switchCameraBtn?.addEventListener(
   "click",
   async () => {
     if (!localStream) return;
@@ -1507,7 +1786,8 @@ switchCameraBtn.addEventListener(
       cameraFacing;
 
     cameraFacing =
-      cameraFacing === "user"
+      cameraFacing ===
+      "user"
         ? "environment"
         : "user";
 
@@ -1517,8 +1797,17 @@ switchCameraBtn.addEventListener(
           {
             video: {
               facingMode:
-                cameraFacing
+                cameraFacing,
+
+              width: {
+                ideal: 1280
+              },
+
+              height: {
+                ideal: 720
+              }
             },
+
             audio: false
           }
         );
@@ -1528,7 +1817,7 @@ switchCameraBtn.addEventListener(
 
       if (!newTrack) {
         throw new Error(
-          "Không có camera."
+          "Không có camera"
         );
       }
 
@@ -1552,9 +1841,12 @@ switchCameraBtn.addEventListener(
         newTrack
       );
 
-      localVideo.srcObject =
-        localStream;
+      if (localVideo) {
+        localVideo.srcObject =
+          localStream;
+      }
 
+      // Thay camera trong WebRTC
       for (
         const pc of Object.values(
           peerConnections
@@ -1585,7 +1877,7 @@ switchCameraBtn.addEventListener(
       );
     } catch (error) {
       console.error(
-        "Switch camera error:",
+        "Switch camera:",
         error
       );
 
@@ -1599,24 +1891,26 @@ switchCameraBtn.addEventListener(
   }
 );
 
-// ===============================
+// =====================================================
 // SCREEN SHARE
-// ===============================
+// =====================================================
 
-screenBtn.addEventListener(
+screenBtn?.addEventListener(
   "click",
   async () => {
     if (screenStream) {
       await stopScreenShare();
+
       return;
     }
 
     if (
       !navigator.mediaDevices ||
-      !navigator.mediaDevices.getDisplayMedia
+      !navigator.mediaDevices
+        .getDisplayMedia
     ) {
       showToast(
-        "Trình duyệt không hỗ trợ chia sẻ màn hình."
+        "Thiết bị/trình duyệt không hỗ trợ chia sẻ màn hình."
       );
 
       return;
@@ -1634,8 +1928,16 @@ screenBtn.addEventListener(
       const screenTrack =
         screenStream.getVideoTracks()[0];
 
-      localVideo.srcObject =
-        screenStream;
+      if (!screenTrack) {
+        throw new Error(
+          "Không có screen track"
+        );
+      }
+
+      if (localVideo) {
+        localVideo.srcObject =
+          screenStream;
+      }
 
       for (
         const pc of Object.values(
@@ -1662,19 +1964,22 @@ screenBtn.addEventListener(
           stopScreenShare();
         };
 
-      screenBtn.firstChild.textContent =
-        "⏹️ ";
+      if (screenBtn.firstChild) {
+        screenBtn.firstChild.textContent =
+          "⏹️ ";
+      }
 
       showToast(
         "Đang chia sẻ màn hình."
       );
     } catch (error) {
       console.error(
-        "Screen share error:",
+        "Screen share:",
         error
       );
 
-      screenStream = null;
+      screenStream =
+        null;
 
       showToast(
         "Không thể chia sẻ màn hình."
@@ -1682,6 +1987,10 @@ screenBtn.addEventListener(
     }
   }
 );
+
+// =====================================================
+// STOP SCREEN SHARE
+// =====================================================
 
 async function stopScreenShare() {
   if (!screenStream) return;
@@ -1694,16 +2003,21 @@ async function stopScreenShare() {
       }
     );
 
-  screenStream = null;
+  screenStream =
+    null;
 
-  if (localStream) {
+  if (
+    localVideo &&
+    localStream
+  ) {
     localVideo.srcObject =
       localStream;
   }
 
   const cameraTrack =
-    localStream &&
-    localStream.getVideoTracks()[0];
+    localStream
+      ? localStream.getVideoTracks()[0]
+      : null;
 
   if (cameraTrack) {
     for (
@@ -1727,47 +2041,54 @@ async function stopScreenShare() {
     }
   }
 
-  screenBtn.firstChild.textContent =
-    "🖥️ ";
+  if (
+    screenBtn?.firstChild
+  ) {
+    screenBtn.firstChild.textContent =
+      "🖥️ ";
+  }
 }
 
-// ===============================
+// =====================================================
 // CHAT
-// ===============================
+// =====================================================
 
-chatBtn.addEventListener(
+chatBtn?.addEventListener(
   "click",
   () => {
-    chatPanel.classList.toggle(
+    chatPanel?.classList.toggle(
       "hidden"
     );
 
     if (
+      chatPanel &&
       !chatPanel.classList.contains(
         "hidden"
       )
     ) {
-      chatInput.focus();
+      chatInput?.focus();
     }
   }
 );
 
-closeChat.addEventListener(
+closeChat?.addEventListener(
   "click",
   () => {
-    chatPanel.classList.add(
+    chatPanel?.classList.add(
       "hidden"
     );
   }
 );
 
-chatForm.addEventListener(
+chatForm?.addEventListener(
   "submit",
   (event) => {
     event.preventDefault();
 
     const text =
-      chatInput.value.trim();
+      String(
+        chatInput?.value || ""
+      ).trim();
 
     if (!text) return;
 
@@ -1778,16 +2099,18 @@ chatForm.addEventListener(
       }
     );
 
-    chatInput.value = "";
+    if (chatInput) {
+      chatInput.value =
+        "";
+    }
   }
 );
 
 socket.on(
   "chat",
-  ({
-    name,
-    text
-  }) => {
+  ({ name, text } = {}) => {
+    if (!messages) return;
+
     const message =
       document.createElement(
         "div"
@@ -1797,7 +2120,9 @@ socket.on(
       "msg";
 
     message.textContent =
-      name + ": " + text;
+      `${name || "Khách"}: ${
+        text || ""
+      }`;
 
     messages.appendChild(
       message
@@ -1808,33 +2133,33 @@ socket.on(
   }
 );
 
-// ===============================
+// =====================================================
 // PARTICIPANTS PANEL
-// ===============================
+// =====================================================
 
-participantsBtn.addEventListener(
+participantsBtn?.addEventListener(
   "click",
   () => {
-    participantsPanel.classList.toggle(
+    participantsPanel?.classList.toggle(
       "hidden"
     );
   }
 );
 
-closeParticipants.addEventListener(
+closeParticipants?.addEventListener(
   "click",
   () => {
-    participantsPanel.classList.add(
+    participantsPanel?.classList.add(
       "hidden"
     );
   }
 );
 
-// ===============================
+// =====================================================
 // HOST CONTROLS
-// ===============================
+// =====================================================
 
-pinHost.addEventListener(
+pinHost?.addEventListener(
   "click",
   () => {
     if (!isHost) return;
@@ -1845,71 +2170,71 @@ pinHost.addEventListener(
   }
 );
 
-muteAll.addEventListener(
+muteAll?.addEventListener(
   "click",
   () => {
-    if (isHost) {
-      socket.emit(
-        "host-mute-all"
-      );
-    }
+    if (!isHost) return;
+
+    socket.emit(
+      "host-mute-all"
+    );
   }
 );
 
-cameraOffAll.addEventListener(
+cameraOffAll?.addEventListener(
   "click",
   () => {
-    if (isHost) {
-      socket.emit(
-        "host-camera-off-all"
-      );
-    }
+    if (!isHost) return;
+
+    socket.emit(
+      "host-camera-off-all"
+    );
   }
 );
 
-unlockAllMic.addEventListener(
+unlockAllMic?.addEventListener(
   "click",
   () => {
-    if (isHost) {
-      socket.emit(
-        "host-unlock-all-mic"
-      );
-    }
+    if (!isHost) return;
+
+    socket.emit(
+      "host-unlock-all-mic"
+    );
   }
 );
 
-unlockAllCamera.addEventListener(
+unlockAllCamera?.addEventListener(
   "click",
   () => {
-    if (isHost) {
-      socket.emit(
-        "host-unlock-all-camera"
-      );
-    }
+    if (!isHost) return;
+
+    socket.emit(
+      "host-unlock-all-camera"
+    );
   }
 );
 
-lockRoom.addEventListener(
+lockRoom?.addEventListener(
   "click",
   () => {
-    if (isHost) {
-      socket.emit(
-        "host-toggle-lock"
-      );
-    }
+    if (!isHost) return;
+
+    socket.emit(
+      "host-toggle-lock"
+    );
   }
 );
 
-// ===============================
-// HOST PIN
-// ===============================
+// =====================================================
+// HOST PIN CHANGED
+// =====================================================
 
 socket.on(
   "host-pin-changed",
   ({
     pinned,
     hostId
-  }) => {
+  } = {}) => {
     pinnedHostId =
       pinned
         ? hostId
@@ -1919,9 +2244,9 @@ socket.on(
   }
 );
 
-// ===============================
+// =====================================================
 // FORCE MUTE
-// ===============================
+// =====================================================
 
 socket.on(
   "force-mute",
@@ -1932,7 +2257,8 @@ socket.on(
       localStream.getAudioTracks()[0];
 
     if (track) {
-      track.enabled = false;
+      track.enabled =
+        false;
     }
 
     updateMeetingButtons();
@@ -1943,9 +2269,9 @@ socket.on(
   }
 );
 
-// ===============================
+// =====================================================
 // FORCE CAMERA OFF
-// ===============================
+// =====================================================
 
 socket.on(
   "force-camera-off",
@@ -1956,7 +2282,8 @@ socket.on(
       localStream.getVideoTracks()[0];
 
     if (track) {
-      track.enabled = false;
+      track.enabled =
+        false;
     }
 
     updateMeetingButtons();
@@ -1967,9 +2294,9 @@ socket.on(
   }
 );
 
-// ===============================
-// UNLOCK
-// ===============================
+// =====================================================
+// UNLOCK MIC
+// =====================================================
 
 socket.on(
   "unlock-mic",
@@ -1980,6 +2307,10 @@ socket.on(
   }
 );
 
+// =====================================================
+// UNLOCK CAMERA
+// =====================================================
+
 socket.on(
   "unlock-camera",
   () => {
@@ -1989,15 +2320,13 @@ socket.on(
   }
 );
 
-// ===============================
-// ROOM LOCK
-// ===============================
+// =====================================================
+// ROOM LOCK CHANGED
+// =====================================================
 
 socket.on(
   "room-lock-changed",
-  ({
-    locked
-  }) => {
+  ({ locked } = {}) => {
     showToast(
       locked
         ? "🔒 Phòng đã được khóa."
@@ -2006,21 +2335,23 @@ socket.on(
   }
 );
 
-// ===============================
+// =====================================================
 // ROOM LOCKED
-// ===============================
+// =====================================================
 
 socket.on(
   "room-locked",
-  ({
-    message
-  }) => {
-    enteringRoom = false;
+  ({ message } = {}) => {
+    enteringRoom =
+      false;
 
-    joinBtn.disabled = false;
+    if (joinBtn) {
+      joinBtn.disabled =
+        false;
 
-    joinBtn.textContent =
-      "🚪 Vào cuộc họp";
+      joinBtn.textContent =
+        "🚪 Vào cuộc họp";
+    }
 
     if (enterMeeting) {
       enterMeeting.disabled =
@@ -2037,24 +2368,40 @@ socket.on(
   }
 );
 
-// ===============================
+// =====================================================
 // ROOM ERROR
-// ===============================
+// =====================================================
 
 socket.on(
   "room-error",
-  ({
-    message
-  }) => {
+  ({ message } = {}) => {
     console.error(
       "Room error:",
       message
     );
 
-    enteringRoom = false;
+    enteringRoom =
+      false;
 
-    createBtn.disabled = false;
-    joinBtn.disabled = false;
+    if (createBtn) {
+      createBtn.disabled =
+        false;
+
+      createBtn.textContent =
+        previewReady
+          ? "➕ Vào phòng với tư cách chủ phòng"
+          : "➕ Tạo cuộc họp mới";
+    }
+
+    if (joinBtn) {
+      joinBtn.disabled =
+        false;
+
+      joinBtn.textContent =
+        previewReady
+          ? "🚪 Vào cuộc họp"
+          : "🚪 Tham gia cuộc họp";
+    }
 
     if (enterMeeting) {
       enterMeeting.disabled =
@@ -2064,18 +2411,6 @@ socket.on(
         "🚪 Vào cuộc họp";
     }
 
-    createBtn.textContent =
-      previewReady
-        ? "➕ Vào phòng với tư cách chủ phòng"
-        : "➕ Tạo cuộc họp mới";
-
-    if (invitedRoom) {
-      joinBtn.textContent =
-        previewReady
-          ? "🚪 Vào cuộc họp"
-          : "🚪 Tham gia cuộc họp";
-    }
-
     showToast(
       message ||
         "Không thể vào phòng."
@@ -2083,9 +2418,9 @@ socket.on(
   }
 );
 
-// ===============================
+// =====================================================
 // REMOVED
-// ===============================
+// =====================================================
 
 socket.on(
   "removed-from-room",
@@ -2098,9 +2433,9 @@ socket.on(
   }
 );
 
-// ===============================
+// =====================================================
 // MEETING ENDED
-// ===============================
+// =====================================================
 
 socket.on(
   "meeting-ended",
@@ -2113,42 +2448,45 @@ socket.on(
   }
 );
 
-// ===============================
+// =====================================================
 // CLEANUP
-// ===============================
+// =====================================================
 
 function cleanupMeeting() {
+  // Screen
   if (screenStream) {
     screenStream
       .getTracks()
       .forEach(
-        (track) => {
-          track.stop();
-        }
+        (track) =>
+          track.stop()
       );
 
-    screenStream = null;
+    screenStream =
+      null;
   }
 
+  // Camera + mic
   if (localStream) {
     localStream
       .getTracks()
       .forEach(
-        (track) => {
-          track.stop();
-        }
+        (track) =>
+          track.stop()
       );
 
-    localStream = null;
+    localStream =
+      null;
   }
 
+  // Peers
   Object.values(
     peerConnections
   ).forEach(
     (pc) => {
       try {
         pc.close();
-      } catch (error) {}
+      } catch {}
     }
   );
 
@@ -2156,7 +2494,9 @@ function cleanupMeeting() {
     peerConnections
   ).forEach(
     (key) => {
-      delete peerConnections[key];
+      delete peerConnections[
+        key
+      ];
     }
   );
 
@@ -2164,60 +2504,90 @@ function cleanupMeeting() {
     pendingCandidates
   ).forEach(
     (key) => {
-      delete pendingCandidates[key];
+      delete pendingCandidates[
+        key
+      ];
     }
   );
 
+  // Remote videos
   document
     .querySelectorAll(
-      ".video-tile:not(#localTile)"
+      ".video-tile"
     )
     .forEach(
       (tile) => {
-        tile.remove();
+        if (
+          tile !== localTile
+        ) {
+          tile.remove();
+        }
       }
     );
 
-  localVideo.srcObject = null;
-  previewVideo.srcObject = null;
+  if (localVideo) {
+    localVideo.srcObject =
+      null;
+  }
 
-  meeting.classList.add(
+  if (previewVideo) {
+    previewVideo.srcObject =
+      null;
+  }
+
+  meeting?.classList.add(
     "hidden"
   );
 
-  home.classList.remove(
+  home?.classList.remove(
     "hidden"
   );
 
-  prejoin.classList.add(
+  prejoin?.classList.add(
     "hidden"
   );
 
-  participantsPanel.classList.add(
+  participantsPanel?.classList.add(
     "hidden"
   );
 
-  chatPanel.classList.add(
+  chatPanel?.classList.add(
     "hidden"
   );
 
-  roomId = null;
-  isHost = false;
-  previewReady = false;
-  enteringRoom = false;
-  pinnedHostId = null;
-  participants = [];
-  cameraFacing = "user";
+  roomId =
+    null;
 
-  localTile.dataset.userId = "";
+  isHost =
+    false;
 
-  createBtn.disabled = false;
-  joinBtn.disabled = false;
+  previewReady =
+    false;
 
-  createBtn.textContent =
-    "➕ Tạo cuộc họp mới";
+  enteringRoom =
+    false;
 
-  if (invitedRoom) {
+  pinnedHostId =
+    null;
+
+  participants =
+    [];
+
+  cameraFacing =
+    "user";
+
+  if (createBtn) {
+    createBtn.disabled =
+      false;
+
+    createBtn.textContent =
+      "➕ Tạo cuộc họp mới";
+  }
+
+  if (joinBtn) {
+    joinBtn.disabled =
+      false;
+
     joinBtn.textContent =
       "🚪 Tham gia cuộc họp";
   }
@@ -2229,22 +2599,30 @@ function cleanupMeeting() {
     enterMeeting.textContent =
       "🚪 Vào cuộc họp";
   }
+
+  // Xóa room khỏi URL
+  try {
+    history.replaceState(
+      null,
+      "",
+      window.location.pathname
+    );
+  } catch {}
 }
 
-// ===============================
+// =====================================================
 // LEAVE
-// ===============================
+// =====================================================
 
-leaveBtn.addEventListener(
+leaveBtn?.addEventListener(
   "click",
   () => {
-    if (
-      !confirm(
+    const ok =
+      window.confirm(
         "Bạn có chắc muốn rời phòng?"
-      )
-    ) {
-      return;
-    }
+      );
+
+    if (!ok) return;
 
     if (isHost) {
       socket.emit(
@@ -2264,9 +2642,9 @@ leaveBtn.addEventListener(
   }
 );
 
-// ===============================
-// SOCKET STATUS
-// ===============================
+// =====================================================
+// SOCKET CONNECT
+// =====================================================
 
 socket.on(
   "connect",
@@ -2278,6 +2656,10 @@ socket.on(
   }
 );
 
+// =====================================================
+// SOCKET DISCONNECT
+// =====================================================
+
 socket.on(
   "disconnect",
   () => {
@@ -2285,4 +2667,19 @@ socket.on(
       "VMeet disconnected"
     );
   }
-)
+);
+
+// =====================================================
+// INITIAL STATE
+// =====================================================
+
+console.log(
+  "VMeet app.js loaded."
+);
+
+if (invitedRoom) {
+  console.log(
+    "Invited room:",
+    invitedRoom
+  );
+}
