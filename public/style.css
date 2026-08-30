@@ -79,4 +79,625 @@ button {
 
 .home input {
   width: 100%;
-  height:
+  height: 52px;
+  border: 1px solid #d5d8de;
+  border-radius: 12px;
+  padding: 0 15px;
+  outline: none;
+  background: #fff;
+  color: #111318;
+  margin-bottom: 12px;
+}
+
+.primary-btn {
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  color: #111318;
+  font-weight: 700;
+}
+
+.join-info {
+  text-align: center;
+  color: #aeb4c0;
+  margin: 18px 0 10px;
+}
+
+.prejoin {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(15px, env(safe-area-inset-top)) max(15px, env(safe-area-inset-right)) max(15px, env(safe-area-inset-bottom)) max(15px, env(safe-area-inset-left));
+  background: #111318;
+}
+
+.prejoin-card {
+  width: min(100%, 430px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prejoin-title {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 2px;
+}
+
+.prejoin-title strong {
+  font-size: 20px;
+}
+
+#prejoinRoom {
+  color: #9da4b1;
+  font-size: 12px;
+}
+
+.preview-video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 15px;
+  background: #292c35;
+  border: 1px solid rgba(255, 255, 255, .08);
+}
+
+.preview-video video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.preview-off {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 7px;
+  background: #292c35;
+  color: #fff;
+  font-size: 30px;
+}
+
+.preview-off span {
+  font-size: 12px;
+  color: #aeb4c0;
+}
+
+.preview-name {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, .55);
+  font-size: 12px;
+}
+
+.preview-controls {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.preview-control {
+  min-height: 50px;
+  border: 0;
+  border-radius: 10px;
+  background: #30333b;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 17px;
+}
+
+.preview-control span {
+  font-size: 12px;
+}
+
+.preview-control.off {
+  background: #b42318;
+}
+
+.enter-btn {
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 11px;
+  background: #fff;
+  color: #111318;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.cancel-btn {
+  min-height: 42px;
+  border: 0;
+  background: transparent;
+  color: #aeb4c0;
+  font-size: 13px;
+}
+
+.meeting {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #111318;
+  overflow: hidden;
+}
+
+.meeting-header {
+  width: 100%;
+  min-height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) 6px max(8px, env(safe-area-inset-left));
+  background: #1b1d23;
+  z-index: 10;
+}
+
+.header-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header-info strong {
+  font-size: 15px;
+}
+
+#roomTitle {
+  max-width: 180px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #9da4b1;
+  font-size: 11px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.header-btn {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: #30333b;
+  color: #fff;
+  font-size: 17px;
+}
+
+/* =====================================================
+   BỐ CỤC MÀN HÌNH CHỦ PHÒNG (HOST) PHÓNG TO TOÀN BỘ
+===================================================== */
+
+.videos {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding: 8px;
+  display: grid;
+  grid-template-rows: 1fr auto; /* Hàng trên là Host (LỚN), Hàng dưới là Thumbnail (NHỎ) */
+  gap: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Màn hình Host Pinned chính */
+.video-tile.pinned-tile {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  background: #1e2026;
+  z-index: 1;
+}
+
+.video-tile.pinned-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Giữ full khung hình không bị cắt */
+}
+
+/* Dải chứa danh sách thumbnail các người tham gia xếp hàng ngang bên dưới */
+.videos-thumb-wrapper {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  width: 100%;
+  max-height: 85px;
+  padding-bottom: 2px;
+  scrollbar-width: none; /* Ẩn thanh cuộn */
+}
+
+.videos-thumb-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tile của các người tham gia dạng Thumbnail thu nhỏ */
+.video-tile {
+  position: relative;
+  flex-shrink: 0;
+  width: 110px;
+  height: 80px;
+  overflow: hidden;
+  border-radius: 9px;
+  background: #292c35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.video-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.camera-off-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #292c35;
+  color: #fff;
+  font-size: 28px;
+}
+
+.camera-off-overlay span {
+  font-size: 11px;
+  color: #aeb4c0;
+}
+
+.video-name {
+  position: absolute;
+  left: 7px;
+  bottom: 7px;
+  max-width: calc(100% - 14px);
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, .55);
+  color: #fff;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 4;
+}
+
+.host-badge {
+  margin-left: 3px;
+}
+
+.pinned-badge {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, .65);
+  font-size: 11px;
+  z-index: 5;
+}
+
+.controls {
+  width: 100%;
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 5px;
+  padding: 6px max(5px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(5px, env(safe-area-inset-left));
+  background: #1b1d23;
+  z-index: 20;
+}
+
+.control-btn {
+  min-width: 0;
+  min-height: 45px;
+  border: 0;
+  border-radius: 9px;
+  background: #30333b;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  font-size: 16px;
+}
+
+.control-btn span {
+  max-width: 100%;
+  font-size: 9px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leave-btn {
+  background: #b42318;
+}
+
+.chat-panel {
+  position: absolute;
+  z-index: 50;
+  left: 8px;
+  right: auto;
+  bottom: calc(68px + env(safe-area-inset-bottom));
+  width: min(88vw, 350px);
+  height: min(48dvh, 390px);
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, .18);
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  pointer-events: auto;
+}
+
+.chat-header {
+  min-height: 42px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 0 9px;
+  background: transparent;
+  border: 0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
+}
+
+.chat-header strong {
+  font-size: 13px;
+}
+
+.close-btn {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .28);
+  color: #fff;
+  font-size: 17px;
+}
+
+.messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 5px 5px 8px 4px;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to bottom, transparent 0, black 10px, black 100%);
+}
+
+.messages::-webkit-scrollbar {
+  display: none;
+}
+
+.msg {
+  width: fit-content;
+  max-width: 90%;
+  margin-bottom: 5px;
+  padding: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .95);
+}
+
+.chat-form {
+  flex-shrink: 0;
+  display: flex;
+  gap: 6px;
+  padding: 5px 4px;
+  background: transparent;
+  border: 0;
+}
+
+#chatInput {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  border: 1px solid rgba(255, 255, 255, .25);
+  border-radius: 20px;
+  padding: 0 13px;
+  outline: none;
+  background: rgba(0, 0, 0, .28);
+  color: #fff;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+#chatInput::placeholder {
+  color: rgba(255, 255, 255, .7);
+}
+
+.send-btn {
+  width: 52px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .9);
+  color: #111318;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.participants-panel {
+  position: absolute;
+  z-index: 60;
+  top: 6px;
+  right: 6px;
+  bottom: 6px;
+  width: min(88vw, 370px);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: #111318;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .4);
+}
+
+.panel-header {
+  min-height: 50px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.panel-header .close-btn {
+  color: #111318;
+  background: transparent;
+}
+
+.host-controls {
+  flex-shrink: 0;
+  padding: 9px;
+  border-bottom: 1px solid #e5e7eb;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.host-title {
+  grid-column: 1 / -1;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.host-action {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #eef0f3;
+  color: #111318;
+  padding: 4px;
+  font-size: 11px;
+}
+
+.participants-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.list-title {
+  padding: 10px 10px 5px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.participants-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 10px 10px;
+}
+
+.participant {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.participant > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.participant button {
+  width: 38px;
+  height: 34px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 7px;
+  background: #eef0f3;
+  font-size: 12px;
+}
+
+.toast {
+  position: fixed;
+  z-index: 100;
+  left: 50%;
+  bottom: calc(82px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  max-width: calc(100vw - 30px);
+  padding: 9px 13px;
+  border-radius: 9px;
+  background: #fff;
+  color: #111318;
+  font-size: 13px;
+  text-align: center;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, .3);
+}
+
+@media (max-width: 360px) {
+  .meeting-header { min-height: 52px; }
+  .header-btn { width: 37px; height: 37px; }
+  .controls { gap: 3px; }
+  .control-btn { min-height: 43px; font-size: 14px; }
+  .control-btn span { font-size: 8px; }
+  .videos { gap: 4px; padding: 4px; }
+  .chat-panel { width: 92vw; }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .meeting-header { min-height: 44px; }
+  .controls { padding-top: 4px; padding-bottom: 4px; }
+  .control-btn { min-height: 37px; flex-direction: row; gap: 3px; }
+  .control-btn span { font-size: 10px; }
+  .chat-panel { left: auto; right: 5px; width: min(55vw, 400px); height: 70dvh; bottom: 5px; }
+}
+
+@media (min-width: 700px) {
+  .controls { display: flex; justify-content: center; gap: 7px; }
+  .control-btn { width: 90px; max-width: 100px; }
+  .videos-thumb-wrapper { max-height: 105px; }
+  .video-tile { width: 140px; height: 95px; }
+}
