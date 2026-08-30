@@ -14,33 +14,25 @@
     content="#111318"
   >
 
-  <title>VMeet</title>
+  <title>VMeet - Họp trực tuyến</title>
 
   <link
     rel="stylesheet"
-    href="style.css"
+    href="/style.css"
   >
 </head>
 
 <body>
 
-  <!-- ================= HOME ================= -->
+  <!-- ========================= -->
+  <!-- HOME -->
+  <!-- ========================= -->
 
-  <main
-    id="home"
-    class="home"
-  >
+  <main id="home" class="home">
 
     <div class="logo">
-
-      <div class="logo-icon">
-        V
-      </div>
-
-      <h1>
-        VMeet
-      </h1>
-
+      <div class="logo-icon">V</div>
+      <h1>VMeet</h1>
     </div>
 
     <p class="subtitle">
@@ -62,12 +54,12 @@
       ➕ Tạo cuộc họp mới
     </button>
 
-    <p
+    <div
       id="joinInfo"
       class="join-info hidden"
     >
       Bạn được mời tham gia cuộc họp
-    </p>
+    </div>
 
     <button
       id="join"
@@ -76,10 +68,19 @@
       🚪 Tham gia cuộc họp
     </button>
 
+    <div
+      id="connectionStatus"
+      class="connection-status"
+    >
+      Đang kết nối...
+    </div>
+
   </main>
 
 
-  <!-- ================= PREJOIN ================= -->
+  <!-- ========================= -->
+  <!-- PREJOIN -->
+  <!-- ========================= -->
 
   <main
     id="prejoin"
@@ -90,16 +91,14 @@
 
       <div class="prejoin-title">
 
-        <strong>
-          Tham gia VMeet
-        </strong>
-
-        <span id="prejoinRoom">
-          Phòng
-        </span>
+        <div>
+          <strong>Tham gia VMeet</strong>
+          <span id="prejoinRoom">
+            Kiểm tra thiết bị
+          </span>
+        </div>
 
       </div>
-
 
       <div class="preview-video">
 
@@ -114,62 +113,52 @@
           id="previewCameraOff"
           class="preview-off hidden"
         >
-
-          📷
-
-          <span>
-            Camera đang tắt
-          </span>
-
+          <div class="off-icon">📷</div>
+          <span>Camera đang tắt</span>
         </div>
 
         <div class="preview-name">
-
           <span id="previewName">
             Bạn
           </span>
-
         </div>
 
       </div>
-
 
       <div class="preview-controls">
 
         <button
           id="previewMic"
           class="preview-control active"
+          type="button"
         >
           🎤
-          <span>
-            Mic
-          </span>
+          <span>Mic</span>
         </button>
 
         <button
           id="previewCam"
           class="preview-control active"
+          type="button"
         >
           📷
-          <span>
-            Camera
-          </span>
+          <span>Camera</span>
         </button>
 
       </div>
 
-
       <button
         id="enterMeeting"
         class="enter-btn"
+        type="button"
       >
         🚪 Vào cuộc họp
       </button>
 
-
       <button
         id="cancelPrejoin"
         class="cancel-btn"
+        type="button"
       >
         Quay lại
       </button>
@@ -179,7 +168,9 @@
   </main>
 
 
-  <!-- ================= MEETING ================= -->
+  <!-- ========================= -->
+  <!-- MEETING -->
+  <!-- ========================= -->
 
   <main
     id="meeting"
@@ -190,9 +181,7 @@
 
       <div class="header-info">
 
-        <strong>
-          VMeet
-        </strong>
+        <strong>VMeet</strong>
 
         <span id="roomTitle">
           Phòng
@@ -200,13 +189,13 @@
 
       </div>
 
-
       <div class="header-actions">
 
         <button
           id="copy"
           class="header-btn"
-          aria-label="Mời người tham gia"
+          type="button"
+          title="Mời người tham gia"
         >
           🔗
         </button>
@@ -214,7 +203,8 @@
         <button
           id="participantsBtn"
           class="header-btn"
-          aria-label="Người tham gia"
+          type="button"
+          title="Người tham gia"
         >
           👥
         </button>
@@ -231,8 +221,6 @@
       class="videos"
     >
 
-      <!-- LOCAL VIDEO -->
-
       <div
         id="localTile"
         class="video-tile local-tile"
@@ -246,20 +234,13 @@
           playsinline
         ></video>
 
-
         <div
           id="localCameraOff"
           class="camera-off-overlay hidden"
         >
-
-          📷
-
-          <span>
-            Camera đang tắt
-          </span>
-
+          <div>📷</div>
+          <span>Camera đang tắt</span>
         </div>
-
 
         <div class="video-name">
 
@@ -276,12 +257,11 @@
 
         </div>
 
-
         <div
           id="localPinnedBadge"
           class="pinned-badge hidden"
         >
-          📌 Đã ghim
+          📌 已 ghim
         </div>
 
       </div>
@@ -305,18 +285,17 @@
         <button
           id="closeChat"
           class="close-btn"
+          type="button"
         >
           ✕
         </button>
 
       </div>
 
-
       <div
         id="messages"
         class="messages"
       ></div>
-
 
       <form
         id="chatForm"
@@ -359,12 +338,12 @@
         <button
           id="closeParticipants"
           class="close-btn"
+          type="button"
         >
           ✕
         </button>
 
       </div>
-
 
       <div
         id="hostControls"
@@ -378,13 +357,15 @@
         <button
           id="pinHost"
           class="host-action"
+          type="button"
         >
-          📌 Ghim chủ phòng cho tất cả
+          📌 Ghim chủ phòng
         </button>
 
         <button
           id="muteAll"
           class="host-action"
+          type="button"
         >
           🔇 Tắt mic tất cả
         </button>
@@ -392,6 +373,7 @@
         <button
           id="cameraOffAll"
           class="host-action"
+          type="button"
         >
           📷 Tắt camera tất cả
         </button>
@@ -399,6 +381,7 @@
         <button
           id="unlockAllMic"
           class="host-action"
+          type="button"
         >
           🎤 Cho phép bật mic
         </button>
@@ -406,6 +389,7 @@
         <button
           id="unlockAllCamera"
           class="host-action"
+          type="button"
         >
           📷 Cho phép bật camera
         </button>
@@ -413,12 +397,12 @@
         <button
           id="lockRoom"
           class="host-action"
+          type="button"
         >
           🔒 Khóa phòng
         </button>
 
       </div>
-
 
       <div class="participants-content">
 
@@ -443,66 +427,55 @@
       <button
         id="mic"
         class="control-btn"
+        type="button"
       >
-        🎤
-        <span>
-          Mic
-        </span>
+        <span class="icon">🎤</span>
+        <span>Mic</span>
       </button>
-
 
       <button
         id="cam"
         class="control-btn"
+        type="button"
       >
-        📷
-        <span>
-          Camera
-        </span>
+        <span class="icon">📷</span>
+        <span>Camera</span>
       </button>
-
 
       <button
         id="switchCamera"
         class="control-btn"
+        type="button"
       >
-        🔄
-        <span>
-          Đổi cam
-        </span>
+        <span class="icon">🔄</span>
+        <span>Đổi cam</span>
       </button>
-
 
       <button
         id="screen"
         class="control-btn"
+        type="button"
       >
-        🖥️
-        <span>
-          Chia sẻ
-        </span>
+        <span class="icon">🖥️</span>
+        <span>Chia sẻ</span>
       </button>
-
 
       <button
         id="chatBtn"
         class="control-btn"
+        type="button"
       >
-        💬
-        <span>
-          Chat
-        </span>
+        <span class="icon">💬</span>
+        <span>Chat</span>
       </button>
-
 
       <button
         id="leave"
         class="control-btn leave-btn"
+        type="button"
       >
-        📞
-        <span>
-          Rời phòng
-        </span>
+        <span class="icon">📞</span>
+        <span>Rời phòng</span>
       </button>
 
     </nav>
@@ -518,10 +491,11 @@
   ></div>
 
 
+  <!-- Socket.IO -->
   <script src="/socket.io/socket.io.js"></script>
 
-  <script src="app.js"></script>
+  <!-- App -->
+  <script src="/app.js"></script>
 
 </body>
-
 </html>
