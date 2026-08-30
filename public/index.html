@@ -1,33 +1,346 @@
-}
-### public/index.html
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
+  <meta name="theme-color" content="#111318">
 
-html <!DOCTYPE html> <html lang="vi"> <head>   <meta charset="UTF-8">   <meta     name="viewport"     content="width=device-width, initial-scale=1.0, viewport-fit=cover"   >   <meta name="theme-color" content="#111318">    <title>VMeet</title>    <link rel="stylesheet" href="/style.css"> </head>  <body>    <!-- HOME -->   <main id="home" class="home">      <div class="logo">       <div class="logo-icon">V</div>       <h1>VMeet</h1>     </div>      <p class="subtitle">       Họp trực tuyến đơn giản     </p>      <input       id="name"       type="text"       placeholder="Nhập tên của bạn"       maxlength="40"       autocomplete="name"     >      <button id="create" class="primary-btn">       ➕ Tạo cuộc họp mới     </button>      <p id="joinInfo" class="join-info hidden">       Bạn được mời tham gia cuộc họp     </p>      <button id="join" class="primary-btn hidden">       🚪 Tham gia cuộc họp     </button>    </main>     <!-- PREJOIN -->   <main id="prejoin" class="prejoin hidden">      <div class="prejoin-card">        <div class="prejoin-title">         <strong>Tham gia VMeet</strong>         <span id="prejoinRoom">Phòng</span>       </div>        <div class="preview-video">          <video           id="previewVideo"           autoplay           muted           playsinline         ></video>          <div           id="previewCameraOff"           class="preview-off hidden"         >           📷           <span>Camera đang tắt</span>         </div>          <div class="preview-name">           <span id="previewName">Bạn</span>         </div>        </div>        <div class="preview-controls">          <button           id="previewMic"           class="preview-control active"         >           🎤           <span>Mic</span>         </button>          <button           id="previewCam"           class="preview-control active"         >           📷           <span>Camera</span>         </button>        </div>        <button id="enterMeeting" class="enter-btn">         🚪 Vào cuộc họp       </button>        <button id="cancelPrejoin" class="cancel-btn">         Quay lại       </button>      </div>    </main>     <!-- MEETING -->   <main id="meeting" class="meeting hidden">      <header class="meeting-header">        <div class="header-info">         <strong>VMeet</strong>         <span id="roomTitle">Phòng</span>       </div>        <div class="header-actions">          <button           id="copy"           class="header-btn"           aria-label="Mời người tham gia"         >           🔗         </button>          <button           id="participantsBtn"           class="header-btn"           aria-label="Người tham gia"         >           👥         </button>        </div>      </header>       <!-- VIDEOS -->     <section id="videos" class="videos">        <div         id="localTile"         class="video-tile local-tile"         data-user-id=""       >          <video           id="localVideo"           autoplay           muted           playsinline         ></video>          <div           id="localCameraOff"           class="camera-off-overlay hidden"         >           📷           <span>Camera đang tắt</span>         </div>          <div class="video-name">           <span id="localName">Bạn</span>            <span             id="localHostBadge"             class="host-badge hidden"           >             👑           </span>         </div>          <div           class="pinned-badge hidden"         >           📌 Đã ghim         </div>        </div>      </section>       <!-- CHAT -->     <section       id="chatPanel"       class="chat-panel hidden"     >        <div class="chat-header">         <strong>💬 Trò chuyện</strong>          <button id="closeChat" class="close-btn">           ✕         </button>       </div>        <div id="messages" class="messages"></div>        <form id="chatForm" class="chat-form">          <input           id="chatInput"           type="text"           maxlength="500"           placeholder="Nhập tin nhắn..."           autocomplete="off"         >          <button type="submit" class="send-btn">           Gửi         </button>        </form>      </section>       <!-- PARTICIPANTS -->     <section       id="participantsPanel"       class="participants-panel hidden"     >        <div class="panel-header">          <strong>👥 Người tham gia</strong>          <button           id="closeParticipants"           class="close-btn"         >           ✕         </button>        </div>        <div id="hostControls" class="host-controls hidden">          <div class="host-title">           👑 Điều khiển chủ phòng         </div>          <button id="pinHost" class="host-action">           📌 Ghim chủ phòng cho tất cả         </button>          <button id="muteAll" class="host-action">           🔇 Tắt mic tất cả         </button>          <button id="cameraOffAll" class="host-action">           📷 Tắt camera tất cả         </button>          <button id="unlockAllMic" class="host-action">           🎤 Cho phép bật mic         </button>          <button id="unlockAllCamera" class="host-action">           📷 Cho phép bật camera         </button>          <button id="lockRoom" class="host-action">           🔒 Khóa phòng         </button>        </div>        <div class="participants-content">          <div class="list-title">           Trong phòng         </div>          <div           id="participantsList"           class="participants-list"         ></div>        </div>      </section>       <!-- CONTROLS -->     <nav class="controls">        <button id="mic" class="control-btn active">         🎤         <span>Mic</span>       </button>        <button id="cam" class="control-btn active">         📷         <span>Camera</span>       </button>        <button id="switchCamera" class="control-btn">         🔄         <span>Đổi cam</span>       </button>        <button id="screen" class="control-btn">         🖥️         <span>Chia sẻ</span>       </button>        <button id="chatBtn" class="control-btn">         💬         <span>Chat</span>       </button>        <button id="leave" class="control-btn leave-btn">         📞         <span>Rời phòng</span>       </button>      </nav>    </main>     <!-- TOAST -->   <div id="toast" class="toast hidden"></div>     <script src="/socket.io/socket.io.js"></script>   <script src="/app.js"></script>  </body> </html> 
+  <title>VMeet</title>
 
----
+  <link rel="stylesheet" href="/style.css">
+</head>
 
-### public/style.css
+<body>
 
-css * {   box-sizing: border-box; }  html, body {   margin: 0;   padding: 0;   width: 100%;   min-height: 100%;   font-family: Arial, Helvetica, sans-serif;   background: #111318;   color: #ffffff; }  body {   overflow-x: hidden; }  button, input {   font: inherit; }  button {   cursor: pointer; }  .hidden {   display: none !important; }   /* ================= HOME ================= */  .home {   width: 100%;   min-height: 100vh;   min-height: 100dvh;    display: flex;   flex-direction: column;   justify-content: center;   align-items: center;    padding: 30px 20px;    background:     radial-gradient(       circle at top,       #242832 0%,       #111318 55%     ); }  .logo {   display: flex;   align-items: center;   gap: 12px;   margin-bottom: 8px; }  .logo-icon {   width: 54px;   height: 54px;    display: flex;   align-items: center;   justify-content: center;    border-radius: 16px;    background: #ffffff;   color: #111318;    font-size: 30px;   font-weight: 800; }  .logo h1 {   margin: 0;   font-size: 38px; }  .subtitle {   margin: 0 0 28px;   color: #aeb4c0; }  .home input {   width: min(420px, 100%);   height: 52px;    padding: 0 16px;    border: 1px solid #343943;   border-radius: 12px;    outline: none;    background: #1b1e25;   color: #ffffff; }  .home input:focus {   border-color: #ffffff; }  .primary-btn {   width: min(420px, 100%);   min-height: 52px;    margin-top: 12px;    border: 0;   border-radius: 12px;    background: #ffffff;   color: #111318;    font-weight: 700; }  .primary-btn:hover {   opacity: 0.9; }  .join-info {   margin: 24px 0 0;   color: #b7bdc9; }   /* ================= PREJOIN ================= */  .prejoin {   width: 100%;   min-height: 100vh;   min-height: 100dvh;    display: flex;   align-items: center;   justify-content: center;    padding: 20px;    background: #111318; }  .prejoin-card {   width: min(650px, 100%);    padding: 22px;    border: 1px solid #2d313a;   border-radius: 18px;    background: #191c22; }  .prejoin-title {   display: flex;   justify-content: space-between;   align-items: center;    margin-bottom: 18px; }  .prejoin-title strong {   font-size: 20px; }  .prejoin-title span {   color: #9ea5b2; }  .preview-video {   position: relative;    width: 100%;   aspect-ratio: 16 / 9;    overflow: hidden;    border-radius: 15px;    background: #090a0d; }  .preview-video video {   width: 100%;   height: 100%;    object-fit: cover; }  .preview-off {   position: absolute;   inset: 0;    display: flex;   flex-direction: column;    align-items: center;   justify-content: center;    gap: 10px;    color: #aeb4c0;   background: #090a0d; }  .preview-name {   position: absolute;   left: 14px;   bottom: 14px;    padding: 7px 10px;    border-radius: 8px;    background: rgba(0, 0, 0, 0.65); }  .preview-controls {   display: flex;   justify-content: center;   gap: 12px;    margin: 18px 0; }  .preview-control {   min-width: 110px;   padding: 12px 15px;    border: 1px solid #363b46;   border-radius: 10px;    background: #242832;   color: #ffffff; }  .preview-control.active {   background: #ffffff;   color: #111318; }  .enter-btn {   width: 100%;   height: 50px;    border: 0;   border-radius: 11px;    background: #ffffff;   color: #111318;    font-weight: 700; }  .cancel-btn {   width: 100%;    margin-top: 10px;   padding: 12px;    border: 0;    background: transparent;   color: #9ea5b2; }   /* ================= MEETING ================= */  .meeting {   width: 100%;   min-height: 100vh;   min-height: 100dvh;    display: flex;   flex-direction: column;    background: #0c0e12; }  .meeting-header {   height: 64px;    display: flex;   justify-content: space-between;   align-items: center;    padding: 0 18px;    border-bottom: 1px solid #242832;    background: #15171c;    flex-shrink: 0; }  .header-info {   display: flex;   flex-direction: column;   gap: 3px; }  .header-info strong {   font-size: 17px; }  .header-info span {   color: #9299a6;   font-size: 13px; }  .header-actions {   display: flex;   gap: 8px; }  .header-btn, .close-btn {   width: 42px;   height: 42px;    border: 1px solid #343943;   border-radius: 10px;    background: #20232a;   color: #ffffff; }  .header-btn:hover, .close-btn:hover {   background: #2a2e37; }   /* ================= VIDEOS ================= */  .videos {   flex: 1;    display: grid;    grid-template-columns:     repeat(auto-fit, minmax(260px, 1fr));    gap: 10px;    padding: 10px;    align-content: center;    overflow: auto; }  .video-tile {   position: relative;    min-height: 180px;   aspect-ratio: 16 / 9;    overflow: hidden;    border-radius: 12px;    background: #191c22;   border: 1px solid #292d36; }  .video-tile video {   width: 100%;   height: 100%;    object-fit: cover;    display: block; }  .video-name {   position: absolute;    left: 10px;   bottom: 10px;    padding: 7px 9px;    border-radius: 7px;    background: rgba(0, 0, 0, 0.65);    font-size: 13px; }  .host-badge {   margin-left: 4px; }  .camera-off-overlay {   position: absolute;   inset: 0;    display: flex;   flex-direction: column;    align-items: center;   justify-content: center;    gap: 8px;    background: #191c22;    color: #9ea5b2; }  .pinned-tile {   grid-column: 1 / -1;   aspect-ratio: 16 / 7; }  .pinned-badge {   position: absolute;    right: 10px;   top: 10px;    padding: 6px 9px;    border-radius: 7px;    background: rgba(0, 0, 0, 0.7);    font-size: 12px; }   /* ================= CONTROLS ================= */  .controls {   min-height: 82px;    display: flex;   justify-content: center;   align-items: center;    gap: 9px;    padding:     10px     max(10px, env(safe-area-inset-left))     calc(10px + env(safe-area-inset-bottom))     max(10px, env(safe-area-inset-right));    background: #15171c;   border-top: 1px solid #242832;    overflow-x: auto;   flex-shrink: 0; }  .control-btn {   min-width: 68px;   height: 58px;    display: flex;   flex-direction: column;   align-items: center;   justify-content: center;    gap: 3px;    border: 1px solid #343943;   border-radius: 11px;    background: #20232a;   color: #ffffff;    font-size: 20px; }  .control-btn span {   font-size: 11px; }  .control-btn.active {   background: #ffffff;   color: #111318; }  .leave-btn {   background: #b4232f;   border-color: #b4232f; }   /* ================= CHAT ================= */  .chat-panel {   position: fixed;    right: 14px;   bottom: 94px;    width: min(360px, calc(100vw - 28px));   height: min(520px, calc(100vh - 120px));    display: flex;   flex-direction: column;    border: 1px solid #343943;   border-radius: 15px;    overflow: hidden;    background: #191c22;    z-index: 50; }  .chat-header, .panel-header {   min-height: 56px;    display: flex;   justify-content: space-between;   align-items: center;    padding: 0 13px;    background: #20232a;    border-bottom: 1px solid #343943; }  .messages {   flex: 1;    padding: 12px;    overflow-y: auto; }  .msg {   display: flex;   flex-direction: column;   gap: 4px;    margin-bottom: 12px; }  .msg strong {   font-size: 13px; }  .msg span {   display: inline-block;    width: fit-content;   max-width: 100%;    padding: 8px 10px;    border-radius: 9px;    background: #282c35;    word-break: break-word; }  .chat-form {   display: flex;   gap: 7px;    padding: 10px;    border-top: 1px solid #343943; }  .chat-form input {   min-width: 0;   flex: 1;    height: 43px;    padding: 0 10px;    border: 1px solid #3a3f4a;   border-radius: 9px;    outline: none;    background: #111318;   color: #ffffff; }  .send-btn {   width: 58px;    border: 0;   border-radius: 9px;    background: #ffffff;   color: #111318;    font-weight: 700; }   /* ================= PARTICIPANTS ================= */  .participants-panel {   position: fixed;    right: 14px;   top: 78px;    width: min(390px, calc(100vw - 28px));   max-height: calc(100vh - 100px);    overflow-y: auto;    border: 1px solid #343943;   border-radius: 15px;    background: #191c22;    z-index: 50; }  .host-controls {   padding: 12px;    border-bottom: 1px solid #343943; }  .host-title {   margin-bottom: 9px;    font-weight: 700; }  .host-action {   width: 100%;    margin-bottom: 7px;   padding: 10px;    border: 1px solid #363b46;   border-radius: 9px;    background: #242832;   color: #ffffff;    text-align: left; }  .participants-content {   padding: 12px; }  .list-title {   margin-bottom: 10px;    color: #9ea5b2;   font-size: 13px; }  .participant {   display: flex;   justify-content: space-between;   align-items: center;    gap: 10px;    padding: 10px 0;    border-bottom: 1px solid #292d36; }  .participant-info {   min-width: 0;    display: flex;   flex-direction: column;    gap: 4px; }  .participant-info strong {   overflow: hidden;   text-overflow: ellipsis;   white-space: nowrap; }  .participant-info small {   color: #9299a6; }  .participant-actions {   display: flex;   gap: 5px; }  .participant-actions button {   width: 34px;   height: 34px;    border: 1px solid #3a3f4a;   border-radius: 7px;    background: #242832;   color: #ffffff; }   /* ================= TOAST ================= */  .toast {   position: fixed;    left: 50%;   bottom: 105px;    transform: translateX(-50%);    max-width: calc(100vw - 30px);    padding: 11px 16px;    border-radius: 10px;    background: #ffffff;   color: #111318;    font-size: 14px;    z-index: 100; }   /* ================= MOBILE ================= */  @media (max-width: 600px) {    .logo h1 {     font-size: 32px;   }    .prejoin-card {     padding: 15px;   }    .preview-controls {     gap: 8px;   }    .preview-control {     flex: 1;     min-width: 0;   }    .videos {     grid-template-columns:       repeat(2, minmax(0, 1fr));      gap: 6px;     padding: 6px;   }    .video-tile {     min-height: 115px;   }    .pinned-tile {     grid-column: 1 / -1;     min-height: 190px;   }    .controls {     justify-content: flex-start;   }    .control-btn {     min-width: 62px;   }    .chat-panel {     right: 8px;     bottom: 90px;      width: calc(100vw - 16px);   }    .participants-panel {     right: 8px;     top: 70px;      width: calc(100vw - 16px);   } } 
+  <!-- HOME -->
+  <main id="home" class="home">
 
----
+    <div class="logo">
+      <div class="logo-icon">V</div>
+      <h1>VMeet</h1>
+    </div>
 
-### package.json
+    <p class="subtitle">
+      Họp trực tuyến đơn giản
+    </p>
 
-```json
-{
-  "name": "vmeet",
-  "version": "1.0.0",
-  "description": "VMeet - WebRTC video meeting application",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {
-    "express": "^4.21.2",
-    "socket.io": "^4.8.1"
-  }
-}
-`
+    <input
+      id="name"
+      type="text"
+      placeholder="Nhập tên của bạn"
+      maxlength="40"
+      autocomplete="name"
+    >
+
+    <button id="create" class="primary-btn">
+      ➕ Tạo cuộc họp mới
+    </button>
+
+    <p id="joinInfo" class="join-info hidden">
+      Bạn được mời tham gia cuộc họp
+    </p>
+
+    <button id="join" class="primary-btn hidden">
+      🚪 Tham gia cuộc họp
+    </button>
+
+  </main>
+
+
+  <!-- PREJOIN -->
+  <main id="prejoin" class="prejoin hidden">
+
+    <div class="prejoin-card">
+
+      <div class="prejoin-title">
+        <strong>Tham gia VMeet</strong>
+        <span id="prejoinRoom">Phòng</span>
+      </div>
+
+      <div class="preview-video">
+
+        <video
+          id="previewVideo"
+          autoplay
+          muted
+          playsinline
+        ></video>
+
+        <div
+          id="previewCameraOff"
+          class="preview-off hidden"
+        >
+          📷
+          <span>Camera đang tắt</span>
+        </div>
+
+        <div class="preview-name">
+          <span id="previewName">Bạn</span>
+        </div>
+
+      </div>
+
+      <div class="preview-controls">
+
+        <button
+          id="previewMic"
+          class="preview-control active"
+        >
+          🎤
+          <span>Mic</span>
+        </button>
+
+        <button
+          id="previewCam"
+          class="preview-control active"
+        >
+          📷
+          <span>Camera</span>
+        </button>
+
+      </div>
+
+      <button id="enterMeeting" class="enter-btn">
+        🚪 Vào cuộc họp
+      </button>
+
+      <button id="cancelPrejoin" class="cancel-btn">
+        Quay lại
+      </button>
+
+    </div>
+
+  </main>
+
+
+  <!-- MEETING -->
+  <main id="meeting" class="meeting hidden">
+
+    <header class="meeting-header">
+
+      <div class="header-info">
+        <strong>VMeet</strong>
+        <span id="roomTitle">Phòng</span>
+      </div>
+
+      <div class="header-actions">
+
+        <button
+          id="copy"
+          class="header-btn"
+          aria-label="Mời người tham gia"
+        >
+          🔗
+        </button>
+
+        <button
+          id="participantsBtn"
+          class="header-btn"
+          aria-label="Người tham gia"
+        >
+          👥
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <!-- VIDEOS -->
+    <section id="videos" class="videos">
+
+      <div
+        id="localTile"
+        class="video-tile local-tile"
+        data-user-id=""
+      >
+
+        <video
+          id="localVideo"
+          autoplay
+          muted
+          playsinline
+        ></video>
+
+        <div
+          id="localCameraOff"
+          class="camera-off-overlay hidden"
+        >
+          📷
+          <span>Camera đang tắt</span>
+        </div>
+
+        <div class="video-name">
+          <span id="localName">Bạn</span>
+
+          <span
+            id="localHostBadge"
+            class="host-badge hidden"
+          >
+            👑
+          </span>
+        </div>
+
+        <div
+          class="pinned-badge hidden"
+        >
+          📌 Đã ghim
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- CHAT -->
+    <section
+      id="chatPanel"
+      class="chat-panel hidden"
+    >
+
+      <div class="chat-header">
+        <strong>💬 Trò chuyện</strong>
+
+        <button id="closeChat" class="close-btn">
+          ✕
+        </button>
+      </div>
+
+      <div id="messages" class="messages"></div>
+
+      <form id="chatForm" class="chat-form">
+
+        <input
+          id="chatInput"
+          type="text"
+          maxlength="500"
+          placeholder="Nhập tin nhắn..."
+          autocomplete="off"
+        >
+
+        <button type="submit" class="send-btn">
+          Gửi
+        </button>
+
+      </form>
+
+    </section>
+
+
+    <!-- PARTICIPANTS -->
+    <section
+      id="participantsPanel"
+      class="participants-panel hidden"
+    >
+
+      <div class="panel-header">
+
+        <strong>👥 Người tham gia</strong>
+
+        <button
+          id="closeParticipants"
+          class="close-btn"
+        >
+          ✕
+        </button>
+
+      </div>
+
+      <div id="hostControls" class="host-controls hidden">
+
+        <div class="host-title">
+          👑 Điều khiển chủ phòng
+        </div>
+
+        <button id="pinHost" class="host-action">
+          📌 Ghim chủ phòng cho tất cả
+        </button>
+
+        <button id="muteAll" class="host-action">
+          🔇 Tắt mic tất cả
+        </button>
+
+        <button id="cameraOffAll" class="host-action">
+          📷 Tắt camera tất cả
+        </button>
+
+        <button id="unlockAllMic" class="host-action">
+          🎤 Cho phép bật mic
+        </button>
+
+        <button id="unlockAllCamera" class="host-action">
+          📷 Cho phép bật camera
+        </button>
+
+        <button id="lockRoom" class="host-action">
+          🔒 Khóa phòng
+        </button>
+
+      </div>
+
+      <div class="participants-content">
+
+        <div class="list-title">
+          Trong phòng
+        </div>
+
+        <div
+          id="participantsList"
+          class="participants-list"
+        ></div>
+
+      </div>
+
+    </section>
+
+
+    <!-- CONTROLS -->
+    <nav class="controls">
+
+      <button id="mic" class="control-btn active">
+        🎤
+        <span>Mic</span>
+      </button>
+
+      <button id="cam" class="control-btn active">
+        📷
+        <span>Camera</span>
+      </button>
+
+      <button id="switchCamera" class="control-btn">
+        🔄
+        <span>Đổi cam</span>
+      </button>
+
+      <button id="screen" class="control-btn">
+        🖥️
+        <span>Chia sẻ</span>
+      </button>
+
+      <button id="chatBtn" class="control-btn">
+        💬
+        <span>Chat</span>
+      </button>
+
+      <button id="leave" class="control-btn leave-btn">
+        📞
+        <span>Rời phòng</span>
+      </button>
+
+    </nav>
+
+  </main>
+
+
+  <!-- TOAST -->
+  <div id="toast" class="toast hidden"></div>
+
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+
+</body>
+</html>
