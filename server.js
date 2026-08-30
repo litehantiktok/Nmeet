@@ -17,14 +17,21 @@ const io = new Server(server, {
 // STATIC FILES
 // ===============================
 
-app.use(express.static(path.join(__dirname, "public")));
+const publicPath = path.join(__dirname, "public");
 
-// ===============================
-// HOME
-// ===============================
+app.use(express.static(publicPath));
 
+// Trang chính
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(publicPath, "index.html"));
+});
+
+// Health check cho Render
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "VMeet"
+  });
 });
 
 // ===============================
@@ -33,85 +40,83 @@ app.get("/", (req, res) => {
 
 const rooms = new Map();
 
-// ===============================
-// CREATE ROOM ID
-// ===============================
-
 function createRoomId() {
-  let id;
+  let roomId;
 
   do {
-    id = Math.random()
+    roomId = Math.random()
       .toString(36)
       .substring(2, 8)
       .toUpperCase();
-  } while (rooms.has(id));
+  } while (rooms.has(roomId));
 
-  return id;
+  return roomId;
 }
-
-// ===============================
-// SEND PARTICIPANTS
-// ===============================
-
-function sendParticipants(roomId) {
-  const room = rooms.get(roomId);
-
-  if (!room) return;
-
-  io.to(roomId).emit(
-    "participants",
-    Array.from(room.users.values())
-  );
-}
-
-// ===============================
-// GET ROOM
-// ===============================
 
 function getRoom(socket) {
-  const roomId = socket.data.room;
+  const roomId = socket.data.roomId;
 
-  if (!roomId) return null;
+  if (!roomId) {
+    return null;
+  }
 
   return rooms.get(roomId) || null;
 }
 
-// ===============================
-// LEAVE ROOM
-// ===============================
+function getParticipants(room) {
+  if (!room) {
+    return [];
+  }
 
-function leaveRoom(socket, notifyOthers = true) {
-  const roomId = socket.data.room;
+  return Array.from(room.users.values());
+}
 
-  if (!roomId) return;
-
+function sendParticipants(roomId) {
   const room = rooms.get(roomId);
 
   if (!room) {
-    socket.data.room = null;
     return;
   }
 
-  // Chủ phòng rời -> kết thúc phòng
-  if (room.host === socket.id) {
+  io.to(roomId).emit(
+    "participants",
+    getParticipants(room)
+  );
+}
+
+function leaveCurrentRoom(socket, notify = true) {
+  const roomId = socket.data.roomId;
+
+  if (!roomId) {
+    return;
+  }
+
+  const room = rooms.get(roomId);
+
+  socket.leave(roomId);
+
+  socket.data.roomId = null;
+
+  if (!room) {
+    return;
+  }
+
+  const wasHost = room.hostId === socket.id;
+
+  room.users.delete(socket.id);
+
+  // Chủ phòng rời thì kết thúc phòng
+  if (wasHost) {
     io.to(roomId).emit("meeting-ended");
 
     rooms.delete(roomId);
 
-    socket.leave(roomId);
-    socket.data.room = null;
-
-    console.log("Room ended:", roomId);
+    console.log(`Room ${roomId} ended.`);
 
     return;
   }
 
-  room.users.delete(socket.id);
-
-  socket.leave(roomId);
-
-  if (notifyOthers) {
+  if (notify) {
     socket.to(roomId).emit("user-left", {
       id: socket.id
     });
@@ -119,11 +124,12 @@ function leaveRoom(socket, notifyOthers = true) {
 
   sendParticipants(roomId);
 
-  socket.data.room = null;
+  // Xóa phòng nếu không còn ai
+  if (room.users.size === 0) {
+    rooms.delete(roomId);
 
-  console.log(
-    `${socket.data.name || "User"} left room ${roomId}`
-  );
+    console.log(`Room ${roomId} deleted.`);
+  }
 }
 
 // ===============================
@@ -134,209 +140,238 @@ io.on("connection", (socket) => {
   console.log("Connected:", socket.id);
 
   // =============================
-  // JOIN / CREATE ROOM
+  // JOIN ROOM
   // =============================
 
   socket.on("join-room", (payload = {}) => {
-    let {
-      room,
-      name,
-      create
-    } = payload;
+    try {
+      let roomId = String(
+        payload.room || ""
+      )
+        .trim()
+        .toUpperCase();
 
-    name = String(name || "Khách")
-      .trim()
-      .substring(0, 40);
+      const name = String(
+        payload.name || "Khách"
+      )
+        .trim()
+        .substring(0, 40);
 
-    // -----------------------------
-    // CREATE NEW ROOM
-    // -----------------------------
+      const create = payload.create === true;
 
-    if (create === true) {
-      room = createRoomId();
+      // -----------------------------
+      // TẠO PHÒNG
+      // -----------------------------
 
-      rooms.set(room, {
-        host: socket.id,
-        locked: false,
-        pinnedForAll: true,
-        users: new Map()
+      if (create) {
+        // Nếu socket đang ở phòng khác
+        if (socket.data.roomId) {
+          leaveCurrentRoom(socket);
+        }
+
+        roomId = createRoomId();
+
+        rooms.set(roomId, {
+          hostId: socket.id,
+          locked: false,
+          pinned: true,
+          users: new Map()
+        });
+
+        console.log(
+          `Room created: ${roomId}`
+        );
+      }
+
+      // -----------------------------
+      // KIỂM TRA PHÒNG
+      // -----------------------------
+
+      const room = rooms.get(roomId);
+
+      if (!room) {
+        socket.emit("room-error", {
+          message: "Không tìm thấy phòng."
+        });
+
+        return;
+      }
+
+      // Nếu đang ở phòng khác
+      if (
+        socket.data.roomId &&
+        socket.data.roomId !== roomId
+      ) {
+        leaveCurrentRoom(socket);
+      }
+
+      // Nếu đã ở phòng này
+      if (
+        socket.data.roomId === roomId
+      ) {
+        return;
+      }
+
+      // Phòng bị khóa
+      if (
+        room.locked &&
+        room.hostId !== socket.id
+      ) {
+        socket.emit("room-locked", {
+          message:
+            "Phòng đang bị khóa. Không thể tham gia."
+        });
+
+        return;
+      }
+
+      // -----------------------------
+      // TẠO USER
+      // -----------------------------
+
+      const user = {
+        id: socket.id,
+        name: name || "Khách",
+        isHost:
+          room.hostId === socket.id,
+        micEnabled: true,
+        cameraEnabled: true,
+        micLocked: false,
+        cameraLocked: false
+      };
+
+      room.users.set(
+        socket.id,
+        user
+      );
+
+      socket.data.roomId = roomId;
+      socket.data.name = user.name;
+
+      socket.join(roomId);
+
+      // -----------------------------
+      // BÁO CHO NGƯỜI VỪA VÀO
+      // -----------------------------
+
+      socket.emit("room-joined", {
+        room: roomId,
+        isHost: user.isHost,
+        pinned: room.pinned,
+        hostId: room.hostId
       });
 
-      console.log("Room created:", room);
-    }
+      // -----------------------------
+      // GỬI DANH SÁCH USER HIỆN TẠI
+      // -----------------------------
 
-    room = String(room || "")
-      .trim()
-      .toUpperCase();
+      sendParticipants(roomId);
 
-    // -----------------------------
-    // CHECK ROOM
-    // -----------------------------
+      // -----------------------------
+      // BÁO USER MỚI CHO NGƯỜI CŨ
+      // -----------------------------
 
-    const currentRoom = rooms.get(room);
+      socket.to(roomId).emit(
+        "user-joined",
+        user
+      );
 
-    if (!currentRoom) {
+      console.log(
+        `${user.name} joined ${roomId}`
+      );
+    } catch (error) {
+      console.error(
+        "join-room error:",
+        error
+      );
+
       socket.emit("room-error", {
-        message: "Không tìm thấy phòng."
+        message:
+          "Có lỗi khi tham gia phòng."
       });
-
-      return;
     }
-
-    // -----------------------------
-    // LOCKED ROOM
-    // -----------------------------
-
-    if (
-      currentRoom.locked &&
-      currentRoom.host !== socket.id
-    ) {
-      socket.emit("room-locked", {
-        message: "Phòng đang bị khóa."
-      });
-
-      return;
-    }
-
-    // -----------------------------
-    // LEAVE OLD ROOM
-    // -----------------------------
-
-    if (
-      socket.data.room &&
-      socket.data.room !== room
-    ) {
-      leaveRoom(socket, false);
-    }
-
-    // -----------------------------
-    // USER
-    // -----------------------------
-
-    const user = {
-      id: socket.id,
-      name: name || "Khách",
-
-      isHost:
-        currentRoom.host === socket.id,
-
-      micEnabled: true,
-      cameraEnabled: true,
-
-      micLocked: false,
-      cameraLocked: false
-    };
-
-    currentRoom.users.set(
-      socket.id,
-      user
-    );
-
-    socket.data.room = room;
-    socket.data.name = user.name;
-
-    socket.join(room);
-
-    // -----------------------------
-    // JOINED
-    // -----------------------------
-
-    socket.emit("room-joined", {
-      room,
-      isHost: user.isHost,
-      pinnedForAll:
-        currentRoom.pinnedForAll,
-      hostId:
-        currentRoom.host
-    });
-
-    // -----------------------------
-    // TELL OTHERS
-    // -----------------------------
-
-    socket.to(room).emit(
-      "user-joined",
-      user
-    );
-
-    // -----------------------------
-    // PARTICIPANTS
-    // -----------------------------
-
-    sendParticipants(room);
-
-    console.log(
-      `${user.name} joined ${room}`
-    );
   });
 
   // =============================
   // WEBRTC SIGNAL
   // =============================
 
-  socket.on(
-    "signal",
-    ({ to, data } = {}) => {
-      if (!to || !data) return;
+  socket.on("signal", (payload = {}) => {
+    const room = getRoom(socket);
 
-      const room = getRoom(socket);
-
-      if (!room) return;
-
-      const target =
-        io.sockets.sockets.get(to);
-
-      if (!target) return;
-
-      // Không cho signal khác phòng
-      if (
-        target.data.room !==
-        socket.data.room
-      ) {
-        return;
-      }
-
-      io.to(to).emit("signal", {
-        from: socket.id,
-        data
-      });
+    if (!room) {
+      return;
     }
-  );
+
+    const to = payload.to;
+    const data = payload.data;
+
+    if (!to || !data) {
+      return;
+    }
+
+    const target =
+      io.sockets.sockets.get(to);
+
+    if (!target) {
+      return;
+    }
+
+    // Không cho signal sang phòng khác
+    if (
+      target.data.roomId !==
+      socket.data.roomId
+    ) {
+      return;
+    }
+
+    target.emit("signal", {
+      from: socket.id,
+      data
+    });
+  });
 
   // =============================
   // CHAT
   // =============================
 
-  socket.on(
-    "chat",
-    ({ text } = {}) => {
-      const room = getRoom(socket);
+  socket.on("chat", (payload = {}) => {
+    const room = getRoom(socket);
 
-      if (!room) return;
-
-      const user =
-        room.users.get(socket.id);
-
-      if (!user) return;
-
-      text = String(text || "")
-        .trim()
-        .substring(0, 500);
-
-      if (!text) return;
-
-      io.to(socket.data.room).emit(
-        "chat",
-        {
-          name: user.name,
-          text
-        }
-      );
+    if (!room) {
+      return;
     }
-  );
+
+    const user =
+      room.users.get(socket.id);
+
+    if (!user) {
+      return;
+    }
+
+    const text = String(
+      payload.text || ""
+    )
+      .trim()
+      .substring(0, 500);
+
+    if (!text) {
+      return;
+    }
+
+    io.to(socket.data.roomId).emit(
+      "chat",
+      {
+        id: socket.id,
+        name: user.name,
+        text,
+        time: Date.now()
+      }
+    );
+  });
 
   // =============================
-  // HOST PIN
+  // HOST: PIN
   // =============================
 
   socket.on(
@@ -346,27 +381,26 @@ io.on("connection", (socket) => {
 
       if (!room) return;
 
-      if (room.host !== socket.id) {
+      if (
+        room.hostId !== socket.id
+      ) {
         return;
       }
 
-      room.pinnedForAll =
-        !room.pinnedForAll;
+      room.pinned = !room.pinned;
 
-      io.to(socket.data.room).emit(
+      io.to(socket.data.roomId).emit(
         "host-pin-changed",
         {
-          pinned:
-            room.pinnedForAll,
-          hostId:
-            room.host
+          pinned: room.pinned,
+          hostId: room.hostId
         }
       );
     }
   );
 
   // =============================
-  // HOST MUTE USER
+  // HOST: MUTE USER
   // =============================
 
   socket.on(
@@ -376,7 +410,9 @@ io.on("connection", (socket) => {
 
       if (!room) return;
 
-      if (room.host !== socket.id) {
+      if (
+        room.hostId !== socket.id
+      ) {
         return;
       }
 
@@ -389,20 +425,17 @@ io.on("connection", (socket) => {
       user.micLocked = true;
 
       io.to(userId).emit(
-        "force-mute",
-        {
-          locked: true
-        }
+        "force-mute"
       );
 
       sendParticipants(
-        socket.data.room
+        socket.data.roomId
       );
     }
   );
 
   // =============================
-  // HOST CAMERA OFF USER
+  // HOST: CAMERA OFF USER
   // =============================
 
   socket.on(
@@ -412,7 +445,9 @@ io.on("connection", (socket) => {
 
       if (!room) return;
 
-      if (room.host !== socket.id) {
+      if (
+        room.hostId !== socket.id
+      ) {
         return;
       }
 
@@ -425,20 +460,17 @@ io.on("connection", (socket) => {
       user.cameraLocked = true;
 
       io.to(userId).emit(
-        "force-camera-off",
-        {
-          locked: true
-        }
+        "force-camera-off"
       );
 
       sendParticipants(
-        socket.data.room
+        socket.data.roomId
       );
     }
   );
 
   // =============================
-  // HOST MUTE ALL
+  // HOST: MUTE ALL
   // =============================
 
   socket.on(
@@ -448,38 +480,33 @@ io.on("connection", (socket) => {
 
       if (!room) return;
 
-      if (room.host !== socket.id) {
+      if (
+        room.hostId !== socket.id
+      ) {
         return;
       }
 
-      room.users.forEach(
-        (user) => {
-          if (
-            user.id === socket.id
-          ) {
-            return;
-          }
-
-          user.micEnabled = false;
-          user.micLocked = true;
-
-          io.to(user.id).emit(
-            "force-mute",
-            {
-              locked: true
-            }
-          );
+      room.users.forEach((user) => {
+        if (user.id === socket.id) {
+          return;
         }
-      );
+
+        user.micEnabled = false;
+        user.micLocked = true;
+
+        io.to(user.id).emit(
+          "force-mute"
+        );
+      });
 
       sendParticipants(
-        socket.data.room
+        socket.data.roomId
       );
     }
   );
 
   // =============================
-  // HOST CAMERA OFF ALL
+  // HOST: CAMERA OFF ALL
   // =============================
 
   socket.on(
@@ -489,38 +516,33 @@ io.on("connection", (socket) => {
 
       if (!room) return;
 
-      if (room.host !== socket.id) {
+      if (
+        room.hostId !== socket.id
+      ) {
         return;
       }
 
-      room.users.forEach(
-        (user) => {
-          if (
-            user.id === socket.id
-          ) {
-            return;
-          }
-
-          user.cameraEnabled = false;
-          user.cameraLocked = true;
-
-          io.to(user.id).emit(
-            "force-camera-off",
-            {
-              locked: true
-            }
-          );
+      room.users.forEach((user) => {
+        if (user.id === socket.id) {
+          return;
         }
-      );
+
+        user.cameraEnabled = false;
+        user.cameraLocked = true;
+
+        io.to(user.id).emit(
+          "force-camera-off"
+        );
+      });
 
       sendParticipants(
-        socket.data.room
+        socket.data.roomId
       );
     }
   );
 
   // =============================
-  // UNLOCK MIC
+  // HOST: UNLOCK MIC
   // =============================
 
   socket.on(
@@ -530,28 +552,28 @@ io.on("connection", (socket) => {
 
       if (!room) return;
 
-      if (room.host !== socket.id) {
+      if (
+        room.hostId !== socket.id
+      ) {
         return;
       }
 
-      room.users.forEach(
-        (user) => {
-          user.micLocked = false;
+      room.users.forEach((user) => {
+        user.micLocked = false;
 
-          io.to(user.id).emit(
-            "unlock-mic"
-          );
-        }
-      );
+        io.to(user.id).emit(
+          "unlock-mic"
+        );
+      });
 
       sendParticipants(
-        socket.data.room
+        socket.data.roomId
       );
     }
   );
 
   // =============================
-  // UNLOCK CAMERA
+  // HOST: UNLOCK CAMERA
   // =============================
 
   socket.on(
@@ -561,77 +583,28 @@ io.on("connection", (socket) => {
 
       if (!room) return;
 
-      if (room.host !== socket.id) {
+      if (
+        room.hostId !== socket.id
+      ) {
         return;
       }
 
-      room.users.forEach(
-        (user) => {
-          user.cameraLocked = false;
+      room.users.forEach((user) => {
+        user.cameraLocked = false;
 
-          io.to(user.id).emit(
-            "unlock-camera"
-          );
-        }
-      );
+        io.to(user.id).emit(
+          "unlock-camera"
+        );
+      });
 
       sendParticipants(
-        socket.data.room
+        socket.data.roomId
       );
     }
   );
 
   // =============================
-  // REMOVE USER
-  // =============================
-
-  socket.on(
-    "host-remove-user",
-    ({ userId } = {}) => {
-      const room = getRoom(socket);
-
-      if (!room) return;
-
-      if (room.host !== socket.id) {
-        return;
-      }
-
-      if (userId === socket.id) {
-        return;
-      }
-
-      const target =
-        io.sockets.sockets.get(userId);
-
-      room.users.delete(userId);
-
-      if (target) {
-        target.leave(
-          socket.data.room
-        );
-
-        target.data.room = null;
-
-        target.emit(
-          "removed-from-room"
-        );
-      }
-
-      io.to(socket.data.room).emit(
-        "user-left",
-        {
-          id: userId
-        }
-      );
-
-      sendParticipants(
-        socket.data.room
-      );
-    }
-  );
-
-  // =============================
-  // LOCK ROOM
+  // HOST: LOCK ROOM
   // =============================
 
   socket.on(
@@ -641,18 +614,80 @@ io.on("connection", (socket) => {
 
       if (!room) return;
 
-      if (room.host !== socket.id) {
+      if (
+        room.hostId !== socket.id
+      ) {
         return;
       }
 
-      room.locked =
-        !room.locked;
+      room.locked = !room.locked;
 
-      io.to(socket.data.room).emit(
+      io.to(socket.data.roomId).emit(
         "room-lock-changed",
         {
           locked: room.locked
         }
+      );
+    }
+  );
+
+  // =============================
+  // HOST: REMOVE USER
+  // =============================
+
+  socket.on(
+    "host-remove-user",
+    ({ userId } = {}) => {
+      const room = getRoom(socket);
+
+      if (!room) return;
+
+      if (
+        room.hostId !== socket.id
+      ) {
+        return;
+      }
+
+      if (
+        userId === socket.id
+      ) {
+        return;
+      }
+
+      const user =
+        room.users.get(userId);
+
+      if (!user) {
+        return;
+      }
+
+      room.users.delete(userId);
+
+      const target =
+        io.sockets.sockets.get(userId);
+
+      if (target) {
+        target.leave(
+          socket.data.roomId
+        );
+
+        target.data.roomId =
+          null;
+
+        target.emit(
+          "removed-from-room"
+        );
+      }
+
+      io.to(socket.data.roomId).emit(
+        "user-left",
+        {
+          id: userId
+        }
+      );
+
+      sendParticipants(
+        socket.data.roomId
       );
     }
   );
@@ -665,7 +700,7 @@ io.on("connection", (socket) => {
     "end-meeting",
     () => {
       const roomId =
-        socket.data.room;
+        socket.data.roomId;
 
       const room =
         rooms.get(roomId);
@@ -673,7 +708,7 @@ io.on("connection", (socket) => {
       if (!room) return;
 
       if (
-        room.host !== socket.id
+        room.hostId !== socket.id
       ) {
         return;
       }
@@ -685,8 +720,7 @@ io.on("connection", (socket) => {
       rooms.delete(roomId);
 
       console.log(
-        "Meeting ended:",
-        roomId
+        `Meeting ended: ${roomId}`
       );
     }
   );
@@ -698,7 +732,7 @@ io.on("connection", (socket) => {
   socket.on(
     "leave-room",
     () => {
-      leaveRoom(
+      leaveCurrentRoom(
         socket,
         true
       );
@@ -712,14 +746,14 @@ io.on("connection", (socket) => {
   socket.on(
     "disconnect",
     () => {
-      leaveRoom(
-        socket,
-        true
-      );
-
       console.log(
         "Disconnected:",
         socket.id
+      );
+
+      leaveCurrentRoom(
+        socket,
+        true
       );
     }
   );
