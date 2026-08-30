@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VMeet</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div id="home" class="page">
+    <div class="card">
+
+      <div class="logo">V<span>Meet</span></div>
+
+      <h1>Họp trực tuyến đơn giản</h1>
+
+      <p>
+        Tạo phòng, gửi link và bắt đầu trò chuyện ngay trên trình duyệt.
+      </p>
+
+      <input id="name" placeholder="Tên của bạn">
+
+      <button id="create">
+        Tạo phòng họp
+      </button>
+
+      <div class="join">
+        <input id="room" placeholder="Nhập mã phòng">
+        <button id="join">
+          Tham gia
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <div id="meeting" class="meeting hidden">
+
+    <header>
+
+      <div class="logo small">
+        V<span>Meet</span>
+      </div>
+
+      <div id="roomTitle"></div>
+
+      <button id="copy">
+        🔗 Mời
+      </button>
+
+    </header>
+
+
+    <main>
+
+      <section class="videos" id="videos">
+
+        <div class="video-tile local">
+
+          <video
+            id="localVideo"
+            autoplay
+            muted
+            playsinline>
+          </video>
+
+          <span id="localName"></span>
+
+        </div>
+
+      </section>
+
+
+      <aside class="chat">
+
+        <h3>💬 Bình luận</h3>
+
+        <div id="messages"></div>
+
+        <form id="chatForm">
+
+          <input
+            id="chatInput"
+            placeholder="Viết bình luận...">
+
+          <button>
+            Gửi
+          </button>
+
+        </form>
+
+      </aside>
+
+    </main>
+
+
+    <footer>
+
+      <button id="mic">
+        🎤 Mic
+      </button>
+
+      <button id="cam">
+        📷 Camera
+      </button>
+
+      <button id="screen">
+        🖥️ Chia sẻ màn hình
+      </button>
+
+      <button id="leave" class="danger">
+        ☎ Rời phòng
+      </button>
+
+    </footer>
+
+  </div>
+
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
